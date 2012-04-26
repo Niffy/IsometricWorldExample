@@ -67,12 +67,12 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	private float maxZoom = 0;
 	private final float zoomDepth = 2; //Smaller this is, the less we zoom in?
 	private boolean mClicked = false;
-	
+
 	private HUD mHUD;
 	private Text mFPS;
 	private Text mXYLoc;
 	private Text mTileRowCol1;
-	
+
 	public Engine mEngine;
 	public IErrorLog log = null;
 
@@ -151,8 +151,8 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 
 	private String[] TMXFilesOrthographic = { 
 			"Ortho_1_32__32"  //0
-			};
-	
+	};
+
 	@Override
 	public EngineOptions onCreateEngineOptions() {
 		this.log = new Logging();
@@ -219,7 +219,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		this.mSceneTMXIsoMenu = this.create_TMX_selection_isometric();
 		this.mSceneTMXORthoMenu = this.create_TMX_selection_orthographic();
 		//We create the layer menu later when attaching the map to the scene
-		
+
 		this.mHUD = new HUD();
 		this.getEngine().getCamera().setHUD(this.mHUD);
 		this.mFPS = new Text(0, 0, this.mFont5, "FPS:","FPS: XXXXXXXXXXXXXXXXX".length(), this.getVertexBufferObjectManager());
@@ -228,7 +228,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		this.mHUD.attachChild(this.mFPS);
 		this.mHUD.attachChild(this.mXYLoc);
 		this.mHUD.attachChild(this.mTileRowCol1);
-		
+
 		mScene.registerUpdateHandler(new TimerHandler(1f, true, new ITimerCallback() {
 			@Override
 			public void onTimePassed(final TimerHandler pTimerHandler) {
@@ -236,7 +236,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 				mFPS.setText("FPS: " + fpsLogger.getFPS());
 			}
 		}));
-		
+
 		pOnCreateSceneCallback.onCreateSceneFinished(mScene);
 	}
 
@@ -333,19 +333,47 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	private void handleActionDown(Scene pScene, TouchEvent pSceneTouchEvent){
 		this.log.i(4, String.format("Touch X: %f Y: %f",pSceneTouchEvent.getX(), pSceneTouchEvent.getY() ));
 		this.touchMap(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
-		
+
 	}
 
 	public void resetCamera(){
 		this.log.i(4, "Reset camera");
-		int origin = this.mMap.getTMXLayers().get(0).getOrigin();
 		this.mCamera.setZoomFactor(this.zoomDepth);
-		this.mCamera.setCenter(origin, 0);
+		this.mCamera.setCenter(0,0);
 		this.mXYLoc.setText("Touch X:0 Y:0");
 		this.mTileRowCol1.setText("Row: Not in Bounds Col: Not in Bounds");
 	}
 
-	public void setUpCamera(final float height, final float width){
+	/**
+	 * Setup the Camera if the map is orthographic. 
+	 * @param height {@link Float} overall height of the map
+	 * @param width {@link Float} overall width of the map
+	 */
+	public void setupCameraOrthographic(final float height, final float width){
+		this.log.i(4, "Setup camera");
+		if (this.CAMERA_WIDTH / height >= this.CAMERA_HEIGHT / width){
+			this.maxZoom = this.CAMERA_WIDTH / height;
+		}else {
+			this.maxZoom = this.CAMERA_HEIGHT / width; 
+		}
+
+		final float MAX_CAMERA_BOUND_ADDITION = 30;
+		final float pBoundsXMin = -MAX_CAMERA_BOUND_ADDITION;
+		final float pBoundsYMin = -MAX_CAMERA_BOUND_ADDITION;
+		final float pBoundsXMax = width + MAX_CAMERA_BOUND_ADDITION;
+		final float pBoundsYMax = height + MAX_CAMERA_BOUND_ADDITION;
+		this.mCamera.setBounds(pBoundsXMin, pBoundsYMin, pBoundsXMax, pBoundsYMax);
+		this.mCamera.setBoundsEnabled(true);	
+		this.resetCamera();
+	}
+
+	/**
+	 * Setup the Camera if the map is isometric. 
+	 * 
+	 * @param height {@link Float} overall height of the map
+	 * @param width {@link Float} overall width of the map
+	 */
+	public void setupCameraIsometric(final float height, final float width){
 		this.log.i(4, "Setup camera");
 		if (this.CAMERA_WIDTH / height >= this.CAMERA_HEIGHT / width){
 			this.maxZoom = this.CAMERA_WIDTH / height;
@@ -353,17 +381,25 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			this.maxZoom = this.CAMERA_HEIGHT / width; 
 		}
 		/*
-		 * Known bug here, due to the cack handed way the Isometric map is first drawn.
-		 * On maps like isometricBlocks, you can't see the bottom left hand tile,
-		 * this is because the origin is incorrectly calculated when drawing,
-		 * so on larger maps with many rows can have tile X axis placement negative
-		 * THIS IS ONLY A THEORY 
-		 * In the mean time, increase the bound addition
+		 * We have to consider the map rows and columns do not match,
+		 * so the xMin works out the bounds to the left of scene x=0,
+		 * xMax to the right of scene x=0.
+		 * The left hand side of the map is the rows, while the right is columns.
+		 * We need to calculate the length of these for use in the bounds
+		 * 
+		 * We have to take into account the placement of the tile.
+		 * The very left edge of the first tile is X = 0
+		 * So when halving the width the right hand side is short changed by 
+		 * half a tile width and the left gains, so add half a tile width to 
+		 * the xMin and xMax to even this out.
 		 */
-		final float MAX_CAMERA_BOUND_ADDITION = 500;
-		final float pBoundsXMin = -MAX_CAMERA_BOUND_ADDITION;
+		final float MAX_CAMERA_BOUND_ADDITION = 60;
+		final float halfTileWidth = this.mMap.getTileWidth() /2;
+		final float xMin = this.mMap.getTileRows() * halfTileWidth;
+		final float xMax = this.mMap.getTileColumns() * halfTileWidth;
+		final float pBoundsXMin = halfTileWidth - xMin - MAX_CAMERA_BOUND_ADDITION;
 		final float pBoundsYMin = -MAX_CAMERA_BOUND_ADDITION;
-		final float pBoundsXMax = width + MAX_CAMERA_BOUND_ADDITION;
+		final float pBoundsXMax = halfTileWidth + xMax + MAX_CAMERA_BOUND_ADDITION;
 		final float pBoundsYMax = height + MAX_CAMERA_BOUND_ADDITION;
 		this.mCamera.setBounds(pBoundsXMin, pBoundsYMin, pBoundsXMax, pBoundsYMax);
 		this.mCamera.setBoundsEnabled(true);	
@@ -378,7 +414,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			this.loadMap_Ortho(pSelection);
 		}
 	}
-	
+
 	public void loadMap_Iso(final int pSelection){
 		this.log.i(5,"loadMap_Iso");
 		String location = this.TMXAssetsLocation + this.TMXFilesIsometric[pSelection] + this.TMXFileTag;
@@ -394,7 +430,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			this.log.e(5, String.format("Error loading file: %s", location), tmxle);
 		}
 	}
-	
+
 	public void loadMap_Ortho(final int pSelection){
 		this.log.i(5,"loadMap_Ortho");
 		String location = this.TMXAssetsLocation + this.TMXFilesOrthographic[pSelection] + this.TMXFileTag;
@@ -424,11 +460,12 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		if(this.SELECTED_TMX_MAP_ISO_ORTHO){
 			height = this.mMap.getTileRows() * (this.mMap.getTileWidth() /2);
 			width = this.mMap.getTileColumns() * (this.mMap.getTileWidth());
+			this.setupCameraIsometric(height, width);
 		}else{
 			height = this.mMap.getTileRows() * this.mMap.getTileHeight();
 			width = this.mMap.getTileColumns() * this.mMap.getTileWidth();
+			this.setupCameraOrthographic(height, width);
 		}
-		this.setUpCamera(height, width);
 	}
 
 	public void detatchMap(){
@@ -478,7 +515,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			this.mTileRowCol1.setText(String.format("Row: %s Col: %s", "Not in Bounds" ,"Not in Bounds"));
 		}
 		this.mXYLoc.setText(String.format("Touch X: %f Y: %f", pX, pY));
-		
+
 		if(this.SELECTED_TMX_MAP_ISO_ORTHO){
 			//Alternative method
 			TMXTile TMXTileIsoAlt = this.mMap.getTMXLayers().get(0).getTMXTileAtIsometricAlternative(pToTiles);
@@ -486,7 +523,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 				this.log.i(6, String.format("Alternative getTMXTileAt - tile found: Row: %d Col: %d", TMXTileIsoAlt.getTileRow(), TMXTileIsoAlt.getTileColumn()));
 			}
 		}
-		
+
 		if(this.ENABLE_TILE_HIT){
 			if(tmxSelected !=null){
 				this.drawIntersect(tmxSelected, pX, pY);
@@ -627,7 +664,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		TextMenuItem selectTMXISOText = new TextMenuItem(SELECT_TMX_MAP_ISO, this.mFont, "Select Isometric Map", this.getVertexBufferObjectManager());
 		final IMenuItem SelectTMXMapIsoItem = new ColorMenuItemDecorator(selectTMXISOText,selected , unselected);
 		SelectTMXMapIsoItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		
+
 		TextMenuItem selectTMXOrthoText = new TextMenuItem(SELECT_TMX_MAP_ORTHO, this.mFont, "Select Orthographic Map", this.getVertexBufferObjectManager());
 		final IMenuItem SelectTMXMapOrthoItem = new ColorMenuItemDecorator(selectTMXOrthoText,selected , unselected);
 		SelectTMXMapOrthoItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -680,7 +717,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		TextMenuItem hit_colour_Text = new TextMenuItem(TILE_SELECT_COLOUR, this.mFont1, "Hit colour", this.getVertexBufferObjectManager());
 		final IMenuItem hit_colour_Item = new ColorMenuItemDecorator(hit_colour_Text,selected , unselected);
 		hit_colour_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		
+
 		TextMenuItem tile_centre_Text = new TextMenuItem(TILE_HIT_CENTRE, this.mFont1, "Tile Centre", this.getVertexBufferObjectManager());
 		final IMenuItem Tile_CentreP_Item = new ColorMenuItemDecorator(tile_centre_Text,selected , unselected);
 		Tile_CentreP_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -778,7 +815,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		TMXSelectionMenu.setOnMenuItemClickListener(this);
 		return TMXSelectionMenu;
 	}
-	
+
 	public MenuScene create_TMX_selection_orthographic(){
 		this.log.i(8, "create_TMX_selection_orthographic");
 		MenuScene TMXSelectionMenu = new MenuScene(this.getEngine().getCamera());
@@ -889,5 +926,5 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			TMXProperties<TMXTileProperty> pTMXTileProperties) {
 		this.log.i(9,"onTMXTileWithPropertiesCreated");
 	}
-	
+
 }
