@@ -27,6 +27,10 @@ hit in the Tile Centre or where the touch occured (HUD still display the Row and
 Column. You can remove the tile hits by going Menu>Remove lines drawn.  You 
 can also disable the touch hits
 
+###Update
+The example now correctly determines the camera bounds for isometric maps.
+Look at the attachMap and setupCameraIsometric method to understand how to set
+up the camera bound correctly. 
+
 ### BUGS
-Read through the Isometric branch code (mostly TMXLayer.java) and the code in 
-this example
+Not aware of any.
