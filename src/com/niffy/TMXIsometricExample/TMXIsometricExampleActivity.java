@@ -84,9 +84,10 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	private static final int SELECT_TMX_MAP_ISO = 1;
 	private static final int SELECT_TMX_MAP_ORTHO = 2;
 	private static final int LAYER_SELECTION_ENABLED = 3;
-	private static final int REMOVE_LINES = 4;
-	private static final int RESET_CAMERA = 5;
-	private static final int BACK_TO_GAME = 6;
+	private static final int DRAW_METHOD = 4;
+	private static final int REMOVE_LINES = 5;
+	private static final int RESET_CAMERA = 6;
+	private static final int BACK_TO_GAME = 7;
 	//Are we monitoring tile hits?
 	private boolean ENABLE_TILE_HIT = false;
 	//What tile hits options there is
@@ -104,7 +105,12 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	//When a map has been selected this helps manage menu and selection.
 	private static final int MAP_SELECTED_ISO = 20;
 	private static final int MAP_SELECTED_ORTHO = 21;
+	//When a drawing method has been selected, this helps mange menu and selection
+	private static final int DRAW_METHOD_SELECTED = 200;
+	private static final int DRAW_METHOD_BACK = 201;
 
+	//Drawing method selected, default DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE
+	private static int SELECTED_DRAW_METHOD = TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE;
 	//Selected layer, tile hit selection (default centre), colour selected (default yellow)
 	private static int SELECTION_LAYER = 0;
 	private static int SELECTION_TILE_HIT = 53;
@@ -120,6 +126,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	protected MenuScene mSceneColourMenu;
 	protected MenuScene mSceneTMXIsoMenu;
 	protected MenuScene mSceneTMXORthoMenu;
+	protected MenuScene mSceneDrawingMethod;
 	org.andengine.util.color.Color selected = new org.andengine.util.color.Color(1f, 0f, 0f);
 	org.andengine.util.color.Color unselected = new org.andengine.util.color.Color(0f, 0f, 0f);
 
@@ -131,6 +138,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	private Font mFont3;
 	private Font mFont4;
 	private Font mFont5;
+	private Font mFont6;
 
 	//Lines belong to tile hits
 	private ArrayList<Line> mTileLineHits = new ArrayList<Line>();
@@ -146,7 +154,8 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			"Isometric_32x16_with_offset_x_y_even", //4
 			"Isometric_64_32_with_offset_y", //5
 			"Isometric_64_32_with_offset_y_evensize", //6
-			"isometricBlocks" //7
+			"isometricBlocks", //7
+			"Large_isometricBlocks" //8
 		};
 
 	private String[] TMXFilesOrthographic = { 
@@ -188,6 +197,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		final ITexture fontTexture3 = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
 		final ITexture fontTexture4 = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
 		final ITexture fontTexture5 = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
+		final ITexture fontTexture6 = new BitmapTextureAtlas(this.getTextureManager(), 512, 512, TextureOptions.BILINEAR);
 		this.mFont = FontFactory.createFromAsset(this.getFontManager(), fontTexture, this.getAssets(), this.mFontFile, 40, true, android.graphics.Color.WHITE);
 		this.mFont.load();
 		this.mFont1 = FontFactory.createFromAsset(this.getFontManager(), fontTexture1, this.getAssets(), this.mFontFile, 40, true, android.graphics.Color.WHITE);
@@ -200,6 +210,8 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		this.mFont4.load();
 		this.mFont5 = FontFactory.createFromAsset(this.getFontManager(), fontTexture5, this.getAssets(), this.mFontFile, 20, true, android.graphics.Color.GRAY);
 		this.mFont5.load();
+		this.mFont6 = FontFactory.createFromAsset(this.getFontManager(), fontTexture6, this.getAssets(), this.mFontFile, 40, true, android.graphics.Color.GRAY);
+		this.mFont6.load();
 		this.mScrollDetector = new SurfaceScrollDetector(this);
 		this.mPinchZoomDetector = new PinchZoomDetector(this);
 		pOnCreateResourcesCallback.onCreateResourcesFinished();
@@ -218,6 +230,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		this.mSceneColourMenu = this.create_colour_selection_menu();
 		this.mSceneTMXIsoMenu = this.create_TMX_selection_isometric();
 		this.mSceneTMXORthoMenu = this.create_TMX_selection_orthographic();
+		this.mSceneDrawingMethod = this.create_drawing_method_menu();
 		//We create the layer menu later when attaching the map to the scene
 
 		this.mHUD = new HUD();
@@ -405,6 +418,12 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		this.mCamera.setBoundsEnabled(true);	
 		this.resetCamera();
 	}
+	
+	public void setDrawingMethod(final int pMethod){
+		if(this.SELECTED_TMX_MAP_ISO_ORTHO){
+			this.mMap.setIsometricDrawMethod(pMethod);
+		}
+	}
 
 	public void loadMap(final int pSelection){
 		this.log.i(4,"Load Map");
@@ -424,7 +443,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		try{
 			txMap = tmxLoader.loadFromAsset(location);
 			this.mMap = txMap;
-			this.mMap.setIsometricDrawMethod(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_PADDING);
+			this.setDrawingMethod(SELECTED_DRAW_METHOD);
 			this.attachMap(txMap);
 		}catch(final TMXLoadException tmxle){
 			this.log.e(5, String.format("Error loading file: %s", location), tmxle);
@@ -661,6 +680,10 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		MenuScene masterMenu = new MenuScene(this.getEngine().getCamera());
 		masterMenu.setBackground(this.mMenuBackground);
 
+		TextMenuItem selectDrawText = new TextMenuItem(DRAW_METHOD, this.mFont, "Select Isometric Drawing Method", this.getVertexBufferObjectManager());
+		final IMenuItem SelectDrawItem = new ColorMenuItemDecorator(selectDrawText,selected , unselected);
+		SelectDrawItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		
 		TextMenuItem selectTMXISOText = new TextMenuItem(SELECT_TMX_MAP_ISO, this.mFont, "Select Isometric Map", this.getVertexBufferObjectManager());
 		final IMenuItem SelectTMXMapIsoItem = new ColorMenuItemDecorator(selectTMXISOText,selected , unselected);
 		SelectTMXMapIsoItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -685,6 +708,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		final IMenuItem BackItem = new ColorMenuItemDecorator(BackText,selected , unselected);
 		BackItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
+		masterMenu.addMenuItem(SelectDrawItem);
 		masterMenu.addMenuItem(SelectTMXMapIsoItem);
 		masterMenu.addMenuItem(SelectTMXMapOrthoItem);
 		masterMenu.addMenuItem(EnableTileHitItem);
@@ -765,6 +789,46 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		layerSelectionScene.setBackgroundEnabled(true);
 		layerSelectionScene.setOnMenuItemClickListener(this);
 		return layerSelectionScene;
+	}
+	
+	public MenuScene create_drawing_method_menu(){
+		this.log.i(8, "create_drawing_method_menu");
+		MenuScene drawingMethodScene = new MenuScene(this.getEngine().getCamera());
+		drawingMethodScene.setBackground(this.mMenuBackground);
+
+		TextMenuItem selectAllText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_ALL", this.getVertexBufferObjectManager());
+		final IMenuItem SelectAllItem = new ColorMenuItemDecorator(selectAllText,selected , unselected);
+		SelectAllItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		SelectAllItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_ALL);
+		
+		TextMenuItem selectSlimText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_CULLING_SLIM ", this.getVertexBufferObjectManager());
+		final IMenuItem SelectSlimItem = new ColorMenuItemDecorator(selectSlimText,selected , unselected);
+		SelectSlimItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		SelectSlimItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_SLIM);
+		
+		TextMenuItem selectPaddingText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_CULLING_PADDING", this.getVertexBufferObjectManager());
+		final IMenuItem SelectPaddingItem = new ColorMenuItemDecorator(selectPaddingText,selected , unselected);
+		SelectPaddingItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		SelectPaddingItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_PADDING);
+		
+		TextMenuItem selectTiledText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE", this.getVertexBufferObjectManager());
+		final IMenuItem SelectTiledItem = new ColorMenuItemDecorator(selectTiledText,selected , unselected);
+		SelectTiledItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+		SelectTiledItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE);
+
+		TextMenuItem selectBackText = new TextMenuItem(DRAW_METHOD_BACK, this.mFont6, "Back", this.getVertexBufferObjectManager());
+		final IMenuItem SelectBackItem = new ColorMenuItemDecorator(selectBackText,selected , unselected);
+		SelectBackItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
+		drawingMethodScene.addMenuItem(SelectAllItem);
+		drawingMethodScene.addMenuItem(SelectSlimItem);
+		drawingMethodScene.addMenuItem(SelectPaddingItem);
+		drawingMethodScene.addMenuItem(SelectTiledItem);
+		drawingMethodScene.addMenuItem(SelectBackItem);
+		drawingMethodScene.buildAnimations();
+		drawingMethodScene.setBackgroundEnabled(true);
+		drawingMethodScene.setOnMenuItemClickListener(this);
+		return drawingMethodScene;
 	}
 
 	public MenuScene create_colour_selection_menu(){
@@ -914,6 +978,17 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			return true;
 		case TILE_HIT_BACK:
 			this.mSceneTileHitMenu.back();
+			return true;
+		case DRAW_METHOD:
+			this.mSceneMasterMenu.setChildSceneModal(this.mSceneDrawingMethod);
+			return true;
+		case DRAW_METHOD_BACK:
+			this.mSceneDrawingMethod.back();
+			return true;
+		case DRAW_METHOD_SELECTED:
+			SELECTED_DRAW_METHOD = (Integer) pMenuItem.getUserData();
+			this.setDrawingMethod(SELECTED_DRAW_METHOD);
+			this.mSceneDrawingMethod.back();
 			return true;
 		default:
 			return false;
