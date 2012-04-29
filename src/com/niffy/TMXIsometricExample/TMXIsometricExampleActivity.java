@@ -116,7 +116,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 	private static int SELECTION_TILE_HIT = 53;
 	private static int SELECTION_COLOUR = 102;
 	//Selected map to load, default is 0 (in TMXFilesIsometric)
-	private static int SELECTED_TMX_MAP = 0;
+	private static int SELECTED_TMX_MAP = 9; 
 	private boolean SELECTED_TMX_MAP_ISO_ORTHO = true; //ISO = true
 	//menu scenes + colour for menus
 	protected Background mMenuBackground = new Background(1f, 1f, 1f, 0.35f);
@@ -155,7 +155,8 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 			"Isometric_64_32_with_offset_y", //5
 			"Isometric_64_32_with_offset_y_evensize", //6
 			"isometricBlocks", //7
-			"Large_isometricBlocks" //8
+			"Large_isometricBlocks", //8
+			"5x5Object"//9
 		};
 
 	private String[] TMXFilesOrthographic = { 
@@ -206,11 +207,11 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener{
 		this.mFont2.load();
 		this.mFont3 = FontFactory.createFromAsset(this.getFontManager(), fontTexture3, this.getAssets(), this.mFontFile, 40, true, android.graphics.Color.WHITE);
 		this.mFont3.load();
-		this.mFont4 = FontFactory.createFromAsset(this.getFontManager(), fontTexture4, this.getAssets(), this.mFontFile, 40, true, android.graphics.Color.WHITE);
+		this.mFont4 = FontFactory.createFromAsset(this.getFontManager(), fontTexture4, this.getAssets(), this.mFontFile, 30, true, android.graphics.Color.WHITE);
 		this.mFont4.load();
-		this.mFont5 = FontFactory.createFromAsset(this.getFontManager(), fontTexture5, this.getAssets(), this.mFontFile, 20, true, android.graphics.Color.GRAY);
+		this.mFont5 = FontFactory.createFromAsset(this.getFontManager(), fontTexture5, this.getAssets(), this.mFontFile, 30, true, android.graphics.Color.GRAY);
 		this.mFont5.load();
-		this.mFont6 = FontFactory.createFromAsset(this.getFontManager(), fontTexture6, this.getAssets(), this.mFontFile, 40, true, android.graphics.Color.GRAY);
+		this.mFont6 = FontFactory.createFromAsset(this.getFontManager(), fontTexture6, this.getAssets(), this.mFontFile, 30, true, android.graphics.Color.GRAY);
 		this.mFont6.load();
 		this.mScrollDetector = new SurfaceScrollDetector(this);
 		this.mPinchZoomDetector = new PinchZoomDetector(this);
