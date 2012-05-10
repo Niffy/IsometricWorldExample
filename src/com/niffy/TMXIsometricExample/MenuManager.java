@@ -18,6 +18,7 @@ public class MenuManager implements MenuConstants {
 	private TMXIsometricExampleActivity parent = null;
 	private MenuDrawer drawer = null;
 	private MenuAttributes attributes = null;
+	private MapHandler mMapHandler;
 	// ===========================================================
 	// Fields
 	// ===========================================================
@@ -26,16 +27,16 @@ public class MenuManager implements MenuConstants {
 	// Constructors
 	// ===========================================================
 
-	public MenuManager(final TMXIsometricExampleActivity pParent, final MenuDrawer pDraw, final MenuAttributes pAttributes){
+	public MenuManager(final TMXIsometricExampleActivity pParent, final MenuDrawer pDraw, final MenuAttributes pAttributes, final MapHandler pMapHandler){
 		this.parent = pParent;
 		this.drawer = pDraw;
 		this.attributes = pAttributes;
+		this.mMapHandler = pMapHandler;
 	}
 
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
-
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
@@ -79,25 +80,25 @@ public class MenuManager implements MenuConstants {
 		}else if(CLICK == MAP_SELECTED_ISO){
 			this.attributes.SELECTED_TMX_MAP_ISO_ORTHO = true;
 			this.attributes.SELECTED_TMX_MAP = (Integer) pMenuItem.getUserData();
-			this.parent.detatchMap();
-			this.parent.loadMap(this.attributes.SELECTED_TMX_MAP);
+			this.mMapHandler.detatchMap();
+			this.mMapHandler.loadMap(this.attributes.SELECTED_TMX_MAP);
 			this.parent.mSceneTMXIsoMenu.back();
 			return true;
 		}else if(CLICK == MAP_SELECTED_ORTHO){
 			this.attributes.SELECTED_TMX_MAP_ISO_ORTHO = false;
 			this.attributes.SELECTED_TMX_MAP = (Integer) pMenuItem.getUserData();
-			this.parent.detatchMap();
-			this.parent.loadMap(this.attributes.SELECTED_TMX_MAP);
+			this.mMapHandler.detatchMap();
+			this.mMapHandler.loadMap(this.attributes.SELECTED_TMX_MAP);
 			this.parent.mSceneTMXORthoMenu.back();
 			return true;
 		}else if(CLICK == OBJECT_LAYER_SELECTED){
 			this.attributes.SELECTION_OBJECT_LAYER = (String) pMenuItem.getUserData();
-			this.parent.attachObjectLayer(this.attributes.SELECTION_OBJECT_LAYER);
+			this.mMapHandler.attachObjectLayer(this.attributes.SELECTION_OBJECT_LAYER);
 			this.parent.mSceneObjectLayerMenu.back();
 			return true;
 		}else if(CLICK == DRAW_METHOD_SELECTED){
 			this.attributes.SELECTED_DRAW_METHOD =  (Integer) pMenuItem.getUserData();
-			this.parent.setDrawingMethod(this.attributes.SELECTED_DRAW_METHOD);
+			this.mMapHandler.setDrawingMethod(this.attributes.SELECTED_DRAW_METHOD);
 			this.parent.mSceneDrawingMethod.back();
 			return true;
 		}else if(CLICK == DRAW_METHOD_BACK){
@@ -185,7 +186,7 @@ public class MenuManager implements MenuConstants {
 			float pMenuItemLocalX, float pMenuItemLocalY){
 		final int CLICK = pMenuItem.getID();
 		if(CLICK == DRAW_OBJECTS_ALL){
-			this.parent.attachAllObjectLayers();
+			this.mMapHandler.attachAllObjectLayers();
 			this.parent.mSceneObjectMenu.back();
 			return true;
 		}else if(CLICK == DRAW_OBJECTS_LAYER){

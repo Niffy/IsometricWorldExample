@@ -24,21 +24,17 @@ import org.andengine.entity.text.Text;
 import org.andengine.entity.util.FPSLogger;
 import org.andengine.extension.tmx.TMXLayer;
 import org.andengine.extension.tmx.TMXLayerObjectTiles;
-import org.andengine.extension.tmx.TMXLoader;
 import org.andengine.extension.tmx.TMXLoader.ITMXTilePropertiesListener;
-import org.andengine.extension.tmx.TMXObjectGroup;
 import org.andengine.extension.tmx.TMXProperties;
 import org.andengine.extension.tmx.TMXTile;
 import org.andengine.extension.tmx.TMXTileProperty;
 import org.andengine.extension.tmx.TMXTiledMap;
-import org.andengine.extension.tmx.util.exception.TMXLoadException;
 import org.andengine.input.touch.TouchEvent;
 import org.andengine.input.touch.detector.PinchZoomDetector;
 import org.andengine.input.touch.detector.PinchZoomDetector.IPinchZoomDetectorListener;
 import org.andengine.input.touch.detector.ScrollDetector;
 import org.andengine.input.touch.detector.ScrollDetector.IScrollDetectorListener;
 import org.andengine.input.touch.detector.SurfaceScrollDetector;
-import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.ui.activity.BaseGameActivity;
 import org.andengine.util.color.Color;
 import org.andengine.util.debug.Debug;
@@ -87,7 +83,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 	//Map and current layer.
 	public TMXLayer currentLayer = null;
 	public TMXTiledMap mMap = null;
-	
+
 	//menu scenes + colour for menus
 	protected Background mMenuBackground = new Background(1f, 1f, 1f, 0.35f);
 	protected MenuScene mSceneMasterMenu;
@@ -100,10 +96,10 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 	protected MenuScene mSceneTMXIsoMenu;
 	protected MenuScene mSceneTMXORthoMenu;
 	protected MenuScene mSceneDrawingMethod;
-	
-	
+
 	org.andengine.util.color.Color selected = new org.andengine.util.color.Color(1f, 0f, 0f);
 	org.andengine.util.color.Color unselected = new org.andengine.util.color.Color(0f, 0f, 0f);
+	org.andengine.util.color.Color objectLines = new org.andengine.util.color.Color(0.4823f, 0.8313f, 0.3254f);
 
 	//fonts
 	private String mFontFile = "font/Roboto-Condensed.ttf";
@@ -111,19 +107,20 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 	private MenuAttributes mMenuAttributes;
 	private MenuDrawer mMenuDrawer;
 	private MenuManager mMenuManager;
-	
+	private MapHandler mMapHandler;
 	//The zap!
 	private Sound mZap;
 	private final String mSound = "11152__jimpurbrick__polysixslowinglaser1.wav";
 	//Little friend..
 	private Vibrator mLittleFriend;
 
-	//Lines belong to tile hits
-	private ArrayList<Line> mTileLineHits = new ArrayList<Line>();
+	//Lines belong to tile hits, objects
+	public ArrayList<Line> mDrawnLines = new ArrayList<Line>();
+	public ArrayList<TMXLayerObjectTiles> mTileObject = new ArrayList<TMXLayerObjectTiles>();
 
 	//TMXFiles
-	private String TMXAssetsLocation = "tmx/";
-	private String TMXFileTag = ".tmx";
+	public String TMXAssetsLocation = "tmx/";
+	public String TMXFileTag = ".tmx";
 	public String[] TMXFilesIsometric = 
 		{ "isometric_grass_and_water", //0
 			"Isometric_32x16_nooffset",  //1
@@ -178,8 +175,9 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 		this.mMenuAttributes = new MenuAttributes();
 		this.mFontManager = new FontManager(this, this.mFontFile);
 		this.mMenuDrawer = new MenuDrawer(this, this.mMenuBackground, this.mFontManager, this.mMenuAttributes);
-		this.mMenuManager = new MenuManager(this, this.mMenuDrawer, this.mMenuAttributes);
-		
+		this.mMapHandler = new MapHandler(this, this.mMenuDrawer, this.mMenuAttributes);
+		this.mMenuManager = new MenuManager(this, this.mMenuDrawer, this.mMenuAttributes, this.mMapHandler);
+
 		this.mScrollDetector = new SurfaceScrollDetector(this);
 		this.mPinchZoomDetector = new PinchZoomDetector(this);
 		this.mLittleFriend = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -209,15 +207,6 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 		this.mSceneTMXIsoMenu = this.mMenuDrawer.create_TMX_selection_isometric();
 		this.mSceneTMXORthoMenu = this.mMenuDrawer.create_TMX_selection_orthographic();
 		this.mSceneDrawingMethod = this.mMenuDrawer.create_drawing_method_menu();
-		
-		
-		//this.mSceneMasterMenu = this.create_master_menu();
-		//this.mSceneTileHitMenu = this.create_tile_hit_menu();
-		//this.mSceneColourMenu = this.create_colour_selection_menu();
-		//this.mSceneTMXIsoMenu = this.create_TMX_selection_isometric();
-		//this.mSceneTMXORthoMenu = this.create_TMX_selection_orthographic();
-		//this.mSceneDrawingMethod = this.create_drawing_method_menu();
-		//We create the layer menu later when attaching the map to the scene
 
 		this.mHUD = new HUD();
 		this.getEngine().getCamera().setHUD(this.mHUD);
@@ -246,7 +235,7 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 		pScene.setOnSceneTouchListener(this);
 		pScene.setTouchAreaBindingOnActionMoveEnabled(true);
 		pScene.setOnAreaTouchTraversalFrontToBack();
-		this.loadMap(this.mMenuAttributes.SELECTED_TMX_MAP);
+		this.mMapHandler.loadMap(this.mMenuAttributes.SELECTED_TMX_MAP);
 		pOnPopulateSceneCallback.onPopulateSceneFinished();
 	}
 
@@ -405,151 +394,8 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 		this.resetCamera();
 	}
 
-	public void setDrawingMethod(final int pMethod){
-		if(this.mMenuAttributes.SELECTED_TMX_MAP_ISO_ORTHO){
-			this.mMap.setIsometricDrawMethod(pMethod);
-		}
-	}
 
-	public void loadMap(final int pSelection){
-		this.log.i(4,"Load Map");
-		if(this.mMenuAttributes.SELECTED_TMX_MAP_ISO_ORTHO){
-			this.loadMap_Iso(pSelection);
-		}else{
-			this.loadMap_Ortho(pSelection);
-		}
-	}
 
-	public void loadMap_Iso(final int pSelection){
-		this.log.i(5,"loadMap_Iso");
-		String location = this.TMXAssetsLocation + this.TMXFilesIsometric[pSelection] + this.TMXFileTag;
-		final TMXLoader tmxLoader = new TMXLoader(this.getAssets(), this.getTextureManager(),
-				TextureOptions.DEFAULT, this.getVertexBufferObjectManager(), this);
-		TMXTiledMap txMap;
-		try{
-			txMap = tmxLoader.loadFromAsset(location);
-			this.mMap = txMap;
-			this.setDrawingMethod(this.mMenuAttributes.SELECTED_DRAW_METHOD);
-			this.attachMap(txMap);
-		}catch(final TMXLoadException tmxle){
-			this.log.e(5, String.format("Error loading file: %s", location), tmxle);
-		}
-	}
-
-	public void loadMap_Ortho(final int pSelection){
-		this.log.i(5,"loadMap_Ortho");
-		String location = this.TMXAssetsLocation + this.TMXFilesOrthographic[pSelection] + this.TMXFileTag;
-		final TMXLoader tmxLoader = new TMXLoader(this.getAssets(), this.getTextureManager(),
-				TextureOptions.DEFAULT, this.getVertexBufferObjectManager(), this);
-		TMXTiledMap txMap;
-		try{
-			txMap = tmxLoader.loadFromAsset(location);
-			this.mMap = txMap;
-			this.attachMap(txMap);
-		}catch(final TMXLoadException tmxle){
-			this.log.e(5, String.format("Error loading file: %s", location), tmxle);
-		}
-	}
-
-	public void attachMap(TMXTiledMap pMap){
-		this.log.i(5, "attachMap");
-		this.getEngine().getScene().detachChildren();
-		ArrayList<TMXLayer> layers = pMap.getTMXLayers();
-		for (TMXLayer tmxLayer : layers) {
-			this.attachLayer(tmxLayer);
-		}
-		this.TilesBlocked = new boolean[pMap.getTileRows()][pMap.getTileColumns()];
-		this.currentLayer = pMap.getTMXLayers().get(0);
-		this.mSceneObjectLayerMenu = this.mMenuDrawer.create_object_layer();
-		float height = 0;
-		float width = 0;
-		if(this.mMenuAttributes.SELECTED_TMX_MAP_ISO_ORTHO){
-			height = this.mMap.getTileRows() * (this.mMap.getTileWidth() /2);
-			width = this.mMap.getTileColumns() * (this.mMap.getTileWidth());
-			this.setupCameraIsometric(height, width);
-		}else{
-			height = this.mMap.getTileRows() * this.mMap.getTileHeight();
-			width = this.mMap.getTileColumns() * this.mMap.getTileWidth();
-			this.setupCameraOrthographic(height, width);
-		}
-	}
-
-	public void detatchMap(){
-		this.log.i(5, "detatchMap");
-		this.getEngine().getScene().detachChildren();
-	}
-
-	public void attachLayer(final TMXLayer pLayer){
-		this.log.i(5, "attachLayer by TMXLayer");
-		if(pLayer != null){
-			this.getEngine().getScene().attachChild(pLayer);
-		}
-	}
-
-	public void attachLayer(final int pLayerNumber){
-		this.log.i(5, "attachLayer by layer number");
-		if(this.mMap != null){
-			TMXLayer pLayer = this.mMap.getTMXLayers().get(pLayerNumber);
-			this.attachLayer(pLayer);
-		}
-	}
-
-	public void detachLayer(final TMXLayer pLayer){
-		this.log.i(5, "detachLayer by TMXLayer");
-		if(pLayer != null){
-			this.getEngine().getScene().detachChild(pLayer);
-		}	
-	}
-
-	public void detachLayer(final int pLayerNumber){
-		this.log.i(5, "detachLayer by layer number");
-		if(this.mMap != null){
-			TMXLayer pLayer = this.mMap.getTMXLayers().get(pLayerNumber);
-			this.detachLayer(pLayer);
-		}
-	}
-
-	public void attachAllObjectLayers(){
-		TMXLayerObjectTiles tmxOTL = null;
-		for (TMXObjectGroup objG : this.mMap.getTMXObjectGroups()) {
-			tmxOTL = new TMXLayerObjectTiles(this.mMap, null, this.getVertexBufferObjectManager(), objG);
-			this.attachObjectLayer(tmxOTL);
-		}
-	}
-	
-	public void attachObjectLayer(final String objectGroupName){
-		TMXLayerObjectTiles tmxOTL = null;
-		for (TMXObjectGroup objG : this.mMap.getTMXObjectGroups()) {
-			if(objG.getName().equals(objectGroupName)){
-				tmxOTL = new TMXLayerObjectTiles(this.mMap, null, this.getVertexBufferObjectManager(), objG);
-				this.attachObjectLayer(tmxOTL);
-			}
-		}
-	}
-	
-	public void attachObjectLayer(final TMXLayerObjectTiles pTMXLayerObjectTiles){
-		if(pTMXLayerObjectTiles.getCount() <=0){
-			this.log.w(789, "This object layer has nothing to draw");
-		}else{
-			this.getEngine().getScene().attachChild(pTMXLayerObjectTiles);
-			this.createBlockedTiles(pTMXLayerObjectTiles);
-		}
-	}
-	
-	public void createBlockedTiles(final TMXLayerObjectTiles pTMXLayerObjectTiles){
-		final int tileColumns = this.mMap.getTileColumns();
-		final int tileRows = this.mMap.getTileRows();
-		TMXTile[][] temp = pTMXLayerObjectTiles.getTMXTiles();
-		for (int j = 0; j < tileRows; j++) {
-			for (int i = 0; i < tileColumns; i++) {
-				if(temp[j][i] != null){
-					if(this.TilesBlocked[j][i] == false){
-						this.TilesBlocked[j][i] = true;
-					}
-				}
-			}
-		}
-	}
 
 	public void touchMap(final float pX, final float pY){
 		//Standard method of getting tile
@@ -579,29 +425,27 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 		}
 	}
 
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_MENU){
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					if(getEngine().getScene().hasChildScene()){
-						getEngine().getScene().getChildScene().back();
-					}else{
-						getEngine().getScene().setChildScene(mSceneMasterMenu, false, true, true);
-					}
-				}
-			});
-		}
-		return super.onKeyDown(keyCode, event);
-	}
-	
 	public void removeLines(){
 		this.log.i(7, "removeLines");
-		for (Line l : this.mTileLineHits) {
+		for (Line l : this.mDrawnLines) {
 			l.detachSelf();
 		}
-		this.mTileLineHits.clear();
+		for(TMXLayerObjectTiles o : this.mTileObject){
+			o.detachSelf();
+		}
+		this.mTileObject.clear();
+		this.mDrawnLines.clear();
+		this.clearBlockedTiles();
+	}
+
+	public void clearBlockedTiles(){
+		final int tileColumns = this.mMap.getTileColumns();
+		final int tileRows = this.mMap.getTileRows();
+		for (int j = 0; j < tileRows; j++) {
+			for (int i = 0; i < tileColumns; i++) {
+				this.TilesBlocked[j][i] = false;
+			}
+		}
 	}
 
 	public void drawIntersect(TMXTile pTile, final float pX, final float pY){
@@ -669,237 +513,28 @@ ITMXTilePropertiesListener, IOnMenuItemClickListener, MenuConstants{
 		line2.setColor(pColor);
 		this.getEngine().getScene().attachChild(line1);
 		this.getEngine().getScene().attachChild(line2);
-		this.mTileLineHits.add(line1);
-		this.mTileLineHits.add(line2);
-	}
-	
-	/*
-
-	public MenuScene create_master_menu(){
-		this.log.i(8, "create_master_menu");
-		MenuScene masterMenu = new MenuScene(this.getEngine().getCamera());
-		masterMenu.setBackground(this.mMenuBackground);
-
-		TextMenuItem selectDrawText = new TextMenuItem(DRAW_METHOD, this.mFont, "Select Isometric Drawing Method", this.getVertexBufferObjectManager());
-		final IMenuItem SelectDrawItem = new ColorMenuItemDecorator(selectDrawText,selected , unselected);
-		SelectDrawItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem selectTMXISOText = new TextMenuItem(SELECT_TMX_MAP_ISO, this.mFont, "Select Isometric Map", this.getVertexBufferObjectManager());
-		final IMenuItem SelectTMXMapIsoItem = new ColorMenuItemDecorator(selectTMXISOText,selected , unselected);
-		SelectTMXMapIsoItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem selectTMXOrthoText = new TextMenuItem(SELECT_TMX_MAP_ORTHO, this.mFont, "Select Orthographic Map", this.getVertexBufferObjectManager());
-		final IMenuItem SelectTMXMapOrthoItem = new ColorMenuItemDecorator(selectTMXOrthoText,selected , unselected);
-		SelectTMXMapOrthoItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem enableTileHitText = new TextMenuItem(SELECT_TILE_HIT, this.mFont, "Tile touch hits options", this.getVertexBufferObjectManager());
-		final IMenuItem EnableTileHitItem = new ColorMenuItemDecorator(enableTileHitText,selected , unselected);
-		EnableTileHitItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem RemoveText = new TextMenuItem(REMOVE_LINES, this.mFont, "Remove lines drawn", this.getVertexBufferObjectManager());
-		final IMenuItem RemoveItem = new ColorMenuItemDecorator(RemoveText,selected , unselected);
-		RemoveItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem CameraResetText = new TextMenuItem(RESET_CAMERA, this.mFont, "Reset Camera", this.getVertexBufferObjectManager());
-		final IMenuItem CameraResetItem = new ColorMenuItemDecorator(CameraResetText,selected , unselected);
-		CameraResetItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem BackText = new TextMenuItem(BACK_TO_GAME, this.mFont, "Back to map", this.getVertexBufferObjectManager());
-		final IMenuItem BackItem = new ColorMenuItemDecorator(BackText,selected , unselected);
-		BackItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		masterMenu.addMenuItem(SelectDrawItem);
-		masterMenu.addMenuItem(SelectTMXMapIsoItem);
-		masterMenu.addMenuItem(SelectTMXMapOrthoItem);
-		masterMenu.addMenuItem(EnableTileHitItem);
-		masterMenu.addMenuItem(RemoveItem);
-		masterMenu.addMenuItem(CameraResetItem);
-		masterMenu.addMenuItem(BackItem);
-		masterMenu.buildAnimations();
-		masterMenu.setBackgroundEnabled(true);
-		masterMenu.setOnMenuItemClickListener(this);
-		return masterMenu;
+		this.mDrawnLines.add(line1);
+		this.mDrawnLines.add(line2);
 	}
 
-	public MenuScene create_tile_hit_menu(){
-		this.log.i(8, "create_tile_hit_menu");
-		MenuScene hitTileMenu = new MenuScene(this.getEngine().getCamera());
-		hitTileMenu.setBackground(this.mMenuBackground);
-
-		if(!this.ENABLE_TILE_HIT){
-			TextMenuItem tile_enable_Text = new TextMenuItem(TILE_ENABLE_DISABLE, this.mFont1, "Enable", this.getVertexBufferObjectManager());
-			final IMenuItem Tile_Enable_Item = new ColorMenuItemDecorator(tile_enable_Text,selected , unselected);
-			Tile_Enable_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-			hitTileMenu.addMenuItem(Tile_Enable_Item);
-		}else{
-			TextMenuItem tile_enable_Text = new TextMenuItem(TILE_ENABLE_DISABLE, this.mFont1, "Disable", this.getVertexBufferObjectManager());
-			final IMenuItem Tile_Enable_Item = new ColorMenuItemDecorator(tile_enable_Text,selected , unselected);
-			Tile_Enable_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-			hitTileMenu.addMenuItem(Tile_Enable_Item);
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_MENU){
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					if(getEngine().getScene().hasChildScene()){
+						getEngine().getScene().getChildScene().back();
+					}else{
+						getEngine().getScene().setChildScene(mSceneMasterMenu, false, true, true);
+					}
+				}
+			});
 		}
-
-		TextMenuItem hit_colour_Text = new TextMenuItem(TILE_SELECT_COLOUR, this.mFont1, "Hit colour", this.getVertexBufferObjectManager());
-		final IMenuItem hit_colour_Item = new ColorMenuItemDecorator(hit_colour_Text,selected , unselected);
-		hit_colour_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem tile_centre_Text = new TextMenuItem(TILE_HIT_CENTRE, this.mFont1, "Tile Centre", this.getVertexBufferObjectManager());
-		final IMenuItem Tile_CentreP_Item = new ColorMenuItemDecorator(tile_centre_Text,selected , unselected);
-		Tile_CentreP_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem tile_point_Text = new TextMenuItem(TILE_HIT_POINT, this.mFont1, "Tile Point", this.getVertexBufferObjectManager());
-		final IMenuItem Tile_point_Item = new ColorMenuItemDecorator(tile_point_Text,selected , unselected);
-		Tile_point_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem hit_layer_Text = new TextMenuItem(TILE_SELECT_LAYER, this.mFont1, "Select layer", this.getVertexBufferObjectManager());
-		final IMenuItem hit_layer_Item = new ColorMenuItemDecorator(hit_layer_Text,selected , unselected);
-		hit_layer_Text.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		TextMenuItem back_Text = new TextMenuItem(TILE_HIT_BACK, this.mFont1, "Back", this.getVertexBufferObjectManager());
-		final IMenuItem back_Item = new ColorMenuItemDecorator(back_Text,selected , unselected);
-		back_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		hitTileMenu.addMenuItem(hit_colour_Item);
-		hitTileMenu.addMenuItem(hit_layer_Item);
-		hitTileMenu.addMenuItem(Tile_CentreP_Item);
-		hitTileMenu.addMenuItem(Tile_point_Item);
-		hitTileMenu.addMenuItem(back_Item);
-		hitTileMenu.buildAnimations();
-		hitTileMenu.setBackgroundEnabled(true);
-		hitTileMenu.setOnMenuItemClickListener(this);
-
-		return hitTileMenu;
+		return super.onKeyDown(keyCode, event);
 	}
 
-	public MenuScene create_layer_selection_menu(){
-		this.log.i(8, "create_layer_selection_menu");
-		MenuScene layerSelectionScene = new MenuScene(this.getEngine().getCamera());
-		layerSelectionScene.setBackground(this.mMenuBackground);
 
-		ArrayList<TMXLayer> layers = this.mMap.getTMXLayers();
-		for (TMXLayer tmxLayer : layers) {
-			TextMenuItem layer_Text = new TextMenuItem(LAYER_SELECTION_ENABLED, this.mFont2, tmxLayer.getName(), this.getVertexBufferObjectManager());
-			final IMenuItem layer_item = new ColorMenuItemDecorator(layer_Text,selected , unselected);
-			layer_item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-			int layer_id = tmxLayer.getIndex();
-			layer_item.setUserData(layer_id);
-			layerSelectionScene.addMenuItem(layer_item);
-		}
-
-		layerSelectionScene.buildAnimations();
-		layerSelectionScene.setBackgroundEnabled(true);
-		layerSelectionScene.setOnMenuItemClickListener(this);
-		return layerSelectionScene;
-	}
-
-	public MenuScene create_drawing_method_menu(){
-		this.log.i(8, "create_drawing_method_menu");
-		MenuScene drawingMethodScene = new MenuScene(this.getEngine().getCamera());
-		drawingMethodScene.setBackground(this.mMenuBackground);
-
-		TextMenuItem selectAllText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_ALL", this.getVertexBufferObjectManager());
-		final IMenuItem SelectAllItem = new ColorMenuItemDecorator(selectAllText,selected , unselected);
-		SelectAllItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		SelectAllItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_ALL);
-
-		TextMenuItem selectSlimText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_CULLING_SLIM ", this.getVertexBufferObjectManager());
-		final IMenuItem SelectSlimItem = new ColorMenuItemDecorator(selectSlimText,selected , unselected);
-		SelectSlimItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		SelectSlimItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_SLIM);
-
-		TextMenuItem selectPaddingText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_CULLING_PADDING", this.getVertexBufferObjectManager());
-		final IMenuItem SelectPaddingItem = new ColorMenuItemDecorator(selectPaddingText,selected , unselected);
-		SelectPaddingItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		SelectPaddingItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_PADDING);
-
-		TextMenuItem selectTiledText = new TextMenuItem(DRAW_METHOD_SELECTED, this.mFont6, "DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE", this.getVertexBufferObjectManager());
-		final IMenuItem SelectTiledItem = new ColorMenuItemDecorator(selectTiledText,selected , unselected);
-		SelectTiledItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		SelectTiledItem.setUserData(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE);
-
-		TextMenuItem selectBackText = new TextMenuItem(DRAW_METHOD_BACK, this.mFont6, "Back", this.getVertexBufferObjectManager());
-		final IMenuItem SelectBackItem = new ColorMenuItemDecorator(selectBackText,selected , unselected);
-		SelectBackItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-		drawingMethodScene.addMenuItem(SelectAllItem);
-		drawingMethodScene.addMenuItem(SelectSlimItem);
-		drawingMethodScene.addMenuItem(SelectPaddingItem);
-		drawingMethodScene.addMenuItem(SelectTiledItem);
-		drawingMethodScene.addMenuItem(SelectBackItem);
-		drawingMethodScene.buildAnimations();
-		drawingMethodScene.setBackgroundEnabled(true);
-		drawingMethodScene.setOnMenuItemClickListener(this);
-		return drawingMethodScene;
-	}
-
-	public MenuScene create_colour_selection_menu(){
-		this.log.i(8, "create_colour_selection_menu");
-		MenuScene colourSceneMenu = new MenuScene(this.getEngine().getCamera());
-		colourSceneMenu.setBackground(this.mMenuBackground);
-
-		TextMenuItem blue_Text = new TextMenuItem(COLOUR_BLUE, this.mFont3, "Blue", this.getVertexBufferObjectManager());
-		final IMenuItem blue_Item = new ColorMenuItemDecorator(blue_Text,selected , unselected);
-		blue_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		colourSceneMenu.addMenuItem(blue_Item);
-
-		TextMenuItem green_Text = new TextMenuItem(COLOUR_GREEN, this.mFont3, "Green", this.getVertexBufferObjectManager());
-		final IMenuItem green_Item = new ColorMenuItemDecorator(green_Text,selected , unselected);
-		green_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		colourSceneMenu.addMenuItem(green_Item);
-
-		TextMenuItem red_Text = new TextMenuItem(COLOUR_RED, this.mFont3, "Red", this.getVertexBufferObjectManager());
-		final IMenuItem red_Item = new ColorMenuItemDecorator(red_Text,selected , unselected);
-		red_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		colourSceneMenu.addMenuItem(red_Item);
-
-		TextMenuItem yellow_Text = new TextMenuItem(COLOUR_YELLOW, this.mFont3, "Yellow", this.getVertexBufferObjectManager());
-		final IMenuItem yellow_Item = new ColorMenuItemDecorator(yellow_Text,selected , unselected);
-		yellow_Item.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		colourSceneMenu.addMenuItem(yellow_Item);
-
-		colourSceneMenu.buildAnimations();
-		colourSceneMenu.setBackgroundEnabled(true);
-		colourSceneMenu.setOnMenuItemClickListener(this);
-		return colourSceneMenu;
-	}
-
-	public MenuScene create_TMX_selection_isometric(){
-		this.log.i(8, "create_TMX_selection_isometric");
-		MenuScene TMXSelectionMenu = new MenuScene(this.getEngine().getCamera());
-		TMXSelectionMenu.setBackground(this.mMenuBackground);
-
-		for (int i = 0; i < this.TMXFilesIsometric.length; i++){
-			TextMenuItem mapText = new TextMenuItem(MAP_SELECTED_ISO, this.mFont4, this.TMXFilesIsometric[i], this.getVertexBufferObjectManager());
-			final IMenuItem mapItem = new ColorMenuItemDecorator(mapText,selected , unselected);
-			mapItem.setUserData(i);
-			mapItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-			TMXSelectionMenu.addMenuItem(mapItem);
-		}
-		TMXSelectionMenu.buildAnimations();
-		TMXSelectionMenu.setBackgroundEnabled(true);
-		TMXSelectionMenu.setOnMenuItemClickListener(this);
-		return TMXSelectionMenu;
-	}
-
-	public MenuScene create_TMX_selection_orthographic(){
-		this.log.i(8, "create_TMX_selection_orthographic");
-		MenuScene TMXSelectionMenu = new MenuScene(this.getEngine().getCamera());
-		TMXSelectionMenu.setBackground(this.mMenuBackground);
-
-		for (int i = 0; i < this.TMXFilesOrthographic.length; i++){
-			TextMenuItem mapText = new TextMenuItem(MAP_SELECTED_ORTHO, this.mFont4, this.TMXFilesOrthographic[i], this.getVertexBufferObjectManager());
-			final IMenuItem mapItem = new ColorMenuItemDecorator(mapText,selected , unselected);
-			mapItem.setUserData(i);
-			mapItem.setBlendFunction(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-			TMXSelectionMenu.addMenuItem(mapItem);
-		}
-		TMXSelectionMenu.buildAnimations();
-		TMXSelectionMenu.setBackgroundEnabled(true);
-		TMXSelectionMenu.setOnMenuItemClickListener(this);
-		return TMXSelectionMenu;
-	}
-
-	*/
-	
 	@Override
 	public boolean onMenuItemClicked(MenuScene pMenuScene, IMenuItem pMenuItem,
 			float pMenuItemLocalX, float pMenuItemLocalY) {
