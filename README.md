@@ -26,20 +26,17 @@ Currently 2 maps have object data, 5x5Object and Large_isometricBlocks_wObject (
 
 When a Tile object layer is added to the scene, it stores which tiles are blocked (the tile the object occupys), then then stops you from drawing on that tile along with playing a sound or vibrating (if you enable via the touch hit options menu)
 
-Polygon and Polylines are parsed and stored in the original Tiled pixel space format, they can be accessed via the TMXObject.
+Polygon and Polylines are parsed and stored in the original Tiled pixel space format, they can be accessed via the TMXObject. These can be converted using a ConvertIsometricPixelToScene object in the Isometric branch. See the maphandling class on how to draw these these objects. (Polygon and Polyline are drawn and processed the same way)  This should make it possible for you to calculate collisions using physics or your own implementation of checking against the TMXObjects.
 
 ###Update
-- Tile objects on isometric maps are now drawable.
-- Also added a sound and vibration when you click on a tile occupied by a tile object.
-- Removed perform click on layer from example, but easy for someone to implement
+- Polygon and Polylines can now be drawn
+- When remove lines is clicked, Tile objects and poly objects are removed from the scene and clears any blocked tile.
 
 ###Future plans
 - Draw tile objects on orthographic maps
 - Implement tileset offsets for orthographic maps
 - Get the map to return TMXLayer and TMXLayerObjectTiles sorted so they are in the correct order to be drawn.
-- Draw polygon and polylines points to demonstrate how to convert from Tiled pixel space into scene space, for ortho and isometric.
-- Set the draw origin via the map rather then on the layers, for isometric maps.
 
 
 ### BUGS
-- If an isometric map origin changes, the touch functions do not reflect this change.
+- If an isometric map origin changes, the touch functions do not reflect this change, same for things like drawing polyobjects.
