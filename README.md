@@ -1,42 +1,48 @@
-TMXIsometricExample
+Isometric World Example
 ===================
 # Requirements!
- * Andengine
+ * Andengine (my Niffy branch) [https://github.com/Niffy/AndEngine/tree/niffy](https://github.com/Niffy/AndEngine/tree/niffy "AndEngine Isometric Branch")
  * TMX extension (Isometric branch created by me and in my github repo) [https://github.com/Niffy/AndEngineTMXTiledMapExtension/tree/isometric](https://github.com/Niffy/AndEngineTMXTiledMapExtension/tree/isometric "AndEngineTMXTiledMapExtension Isometric Branch")
 
 ### How to build
- * Just like the Andengine Examples (hopefully)
  * So clone this repo
  * Right click in Eclipse on folder > Android Tools > Fix Project Properties
+ * Fix any imports (such as point to your andengine location)
  
-### How to use it/features
-The default map is 5x5Object, which has object data.
+### Wiki
 
-You can change the map and do a few things by pressing your MENU key.
+Visit the wiki to get an understand of how to use isometric features. 
+ 
+### What the example does
+ * 1 Isometric map
+ * One isometric character
+ * A few isometric cubes
+ * Simple path manager
+ * Simple tile manager
+ * Touch Manager
+ * Using fragments
+ 
+### How to use
+Press the bulid object menu to get a dialog fragment up, select an item on the list and click done. You can come out of the dialog by pressing cancel. **Note** Andengine is still running in the background, so the dialog is not modal. You can see in logcat the FPS logger.
 
-There are some sample isometric maps I've created with offsets and 2 Orthographic maps.
+Place object on the map, when placed press done on the bottom of the screen. You can press cancel to stop the process. When done is clicked the location is then blocked in the tile manager.
 
-You can see the tile row and column touched in the HUD, along with the FPS and X Y touch locations.
+Repeat till you get some objects on the screen.
 
-You can draw a cross on the tile if you enable "Tile touch hits" (access via 
-menu), you can change the colour. You can draw the touch
-hit in the Tile Centre or where the touch occured (HUD still display the Row and Column. You can remove the tile hits by going Menu>Remove lines drawn.  You can also disable the touch hits. 
+To place a human press place human then click a tile on the map.
 
-Currently 2 maps have object data, 5x5Object and Large_isometricBlocks_wObject (Run this large map and see if you can get above 1FPS!).  To draw the tile objects press MENU > Select Objects layers to draw.  You can draw all(even if they have no tile objects, as it can detect this) or select a layer yourself to draw (If you draw layer 5 then 4, layer 4 will be on top, currently no sorting takes place in this example).
-
-When a Tile object layer is added to the scene, it stores which tiles are blocked (the tile the object occupys), then then stops you from drawing on that tile along with playing a sound or vibrating (if you enable via the touch hit options menu)
-
-Polygon and Polylines are parsed and stored in the original Tiled pixel space format, they can be accessed via the TMXObject. These can be converted using a ConvertIsometricPixelToScene object in the Isometric branch. See the maphandling class on how to draw these these objects. (Polygon and Polyline are drawn and processed the same way)  This should make it possible for you to calculate collisions using physics or your own implementation of checking against the TMXObjects.
-
-###Update
-- Polygon and Polylines can now be drawn
-- When remove lines is clicked, Tile objects and poly objects are removed from the scene and clears any blocked tile.
-
-###Future plans
-- Draw tile objects on orthographic maps
-- Implement tileset offsets for orthographic maps
-- Get the map to return TMXLayer and TMXLayerObjectTiles sorted so they are in the correct order to be drawn.
+To move the human, click the human then click the destination tile.
+**Note** Placing objects when a human is moving will not block the human, there is no scope for this in this example. Also the path management cannot cope if you try to access a location blocked off, again no scope in the path management example to solve this.
 
 
 ### BUGS
-- If an isometric map origin changes, the touch functions do not reflect this change, same for things like drawing polyobjects.
+There can be some draw problems related to the depth sorting, when placing objects close together they can incorrectly draw.  I think this is most likely down to the algorithim, its not perfect, if you wanted perfect isometric you'd have to go the full 3D route.  But if you don't place items too close then this shouldn't be a problem.
+
+To see this bug in action you could try placing the cubes in the follow row and col locations. e.g cube_filename.png [Row,Col]
+
+- a32x32x32.png [0,0]
+- a32x32x32.png [0,2]
+- a32x128x32.png [0,1]
+- a64x32x32.png [3,1]
+
+Placing some other items as well can sometimes fix this.  You may also notice in this situation they will flicker if a human is moving.
