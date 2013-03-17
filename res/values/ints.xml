@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+        <!-- Camera Settings -->
+    <integer name="zoomDepth">3</integer>
+	<integer name="zoomMax">1</integer>
+</resources>

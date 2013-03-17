@@ -3,7 +3,7 @@
  <tileset firstgid="1" source="tsx/isometricBlocks.tsx"/>
  <layer name="Tile Layer 1" width="21" height="30">
   <data encoding="base64" compression="gzip">
-   H4sIAAAAAAAAC2NkYGBgAmJGKtLUNGukm0lt9436fdRMXHLYAKVxRI6ZtHDnSDZzNB8NfjNH42g0PKnpdwDqhYTb2AkAAA==
+   H4sIAAAAAAAAC+3FsQkAAAgDsNb/j9Y3hAwhTTKntm3bfv0CQmv8YtgJAAA=
   </data>
  </layer>
 </map>
