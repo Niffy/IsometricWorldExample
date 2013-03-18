@@ -38,11 +38,8 @@ To move the human, click the human then click the destination tile.
 ### BUGS
 There can be some draw problems related to the depth sorting, when placing objects close together they can incorrectly draw.  I think this is most likely down to the algorithim, its not perfect, if you wanted perfect isometric you'd have to go the full 3D route.  But if you don't place items too close then this shouldn't be a problem.
 
-To see this bug in action you could try placing the cubes in the follow row and col locations. e.g cube_filename.png [Row,Col]
-
-- a32x32x32.png [0,0]
-- a32x32x32.png [0,2]
-- a32x128x32.png [0,1]
-- a64x32x32.png [3,1]
+![IsometricWorldExample01](https://github.com/Niffy/IsometricWorldExample/wiki/images/bugs/IsometricWorldExample01.png)
+![IsometricWorldExample02](https://github.com/Niffy/IsometricWorldExample/wiki/images/bugs/IsometricWorldExample02.png)
+![IsometricWorldExample03](https://github.com/Niffy/IsometricWorldExample/wiki/images/bugs/IsometricWorldExample03.png)
 
 Placing some other items as well can sometimes fix this.  You may also notice in this situation they will flicker if a human is moving.
