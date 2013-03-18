@@ -64,9 +64,16 @@ public class HumanPlacer implements ITouchListener {
 			return;
 		}
 		float[] loc = this.mParent.mMapHandler.getTileCentre(tileRC);
+		/*
+		 * offset[0] = X offset
+		 * offset[1] = Y Offset
+		 */
 		float[] offset = new float[2];
 		offset[0] = -15.5f;
 		offset[1] = -40f;
+		/*
+		 * As our offsets are already negative, adding to the tile centre will really subtract instead
+		 */
 		loc[0] += offset[0];
 		loc[1] += offset[1];
 		final AnimatedSprite humanSprite = new AnimatedSprite(loc[0], loc[1], this.mTextureRegion,

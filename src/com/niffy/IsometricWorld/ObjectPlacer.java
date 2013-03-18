@@ -77,6 +77,10 @@ public class ObjectPlacer implements ITouchListener {
 					this.mSprite.set3DPosition(this.m3DX, this.m3DY, this.m3DZ);
 					this.mParent.getEngine().getScene().attachChild(this.mSprite);
 					this.mParent.getEngine().getScene().sortChildren();
+					/*
+					 * We could attach the sprite at its default of 0,0 
+					 * then set the position of the sprite, as it will sort the scene children straight away
+					 */
 				}
 			} else {
 				log.debug("tile found is null");
