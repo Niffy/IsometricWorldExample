@@ -6,7 +6,7 @@ import org.andengine.entity.primitive.Line;
 import org.andengine.entity.shape.ITouchAreaListener;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.input.touch.TouchEvent;
-import org.andengine.util.color.Color;
+import org.andengine.util.adt.color.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,7 +180,7 @@ public class HumanEntity implements IHumanEntity, ITouchAreaListener, IIsometric
 	public void recalculate(IEntity pEntity, float pDrawX, float pDrawY) {
 
 		final float pX = pDrawX + this.m3DRecalculatePoint[0];
-		final float pY = pDrawY + this.m3DRecalculatePoint[1];
+		final float pY = pDrawY - this.m3DRecalculatePoint[1];
 		float pSectX = 0;
 		float pSectY = 0;
 		float resultY = 0;
@@ -191,7 +191,7 @@ public class HumanEntity implements IHumanEntity, ITouchAreaListener, IIsometric
 		if (pLoc != null) {
 			/* Now get the top tile point*/
 			pDrawOrigin = this.mMapManager.getTileCentre(pLoc);
-			pDrawOrigin[1] -= (this.mMapManager.getTMXTiledMap().getTileHeight() /2);
+			pDrawOrigin[1] += (this.mMapManager.getTMXTiledMap().getTileHeight() /2);
 			float p3DX = this.mMapManager.getTMXTiledMap().getTileHeight() * pLoc[1];
 			float p3DY = this.mMapManager.getTMXTiledMap().getTileHeight() * pLoc[0];
 			/*
@@ -202,27 +202,27 @@ public class HumanEntity implements IHumanEntity, ITouchAreaListener, IIsometric
 				 * On the right hand side
 				 */
 				float d1 = pX - pDrawOrigin[0];
-				float a = d1 / 2;
-				float d2 = pY - pDrawOrigin[1];
+				float a = Math.abs(d1 / 2);
+				float d2 = Math.abs(pY -  pDrawOrigin[1]);
 				resultY = d2 - a;
 				resultX =  d1 + resultY;
 				final float[] pObjects = new float[]{d1,a,d2};
 				pColour = Color.PINK;
-				pSectX = (resultX - resultY) + pDrawOrigin[0];
-				pSectY = (((resultX - resultY) /2) + resultY) + pDrawOrigin[1];
+				//pSectX = (resultX - resultY) + pDrawOrigin[0];
+				//pSectY = (((resultX - resultY) /2) + resultY) + pDrawOrigin[1];
 			}else{
 				/*
 				 * On the left hand side
 				 */
 				float d1 = pDrawOrigin[0] - pX;
-				float a = d1 / 2;
-				float d2 = pY - pDrawOrigin[1];
+				float a = Math.abs(d1 / 2);
+				float d2 = Math.abs(pY - pDrawOrigin[1]);
 				resultY = d2 + a;
 				resultX =  d1 - resultY;
 				final float[] pObjects = new float[]{d1,a,d2};
 				pColour = Color.RED;
-				pSectX = pDrawOrigin[0] - (resultY - resultX);
-				pSectY = (((resultX - resultY) /2) + resultY) + pDrawOrigin[1];
+				//pSectX = pDrawOrigin[0] - (resultY - resultX);
+				//pSectY = (((resultX - resultY) /2) + resultY) + pDrawOrigin[1];
 			}
 			
 			p3DX += resultX;

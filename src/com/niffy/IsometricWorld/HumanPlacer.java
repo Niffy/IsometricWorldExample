@@ -53,7 +53,7 @@ public class HumanPlacer implements ITouchListener {
 	@Override
 	public void onTouchPassThrough(TouchEvent pSceneTouchEvent, float pX, float pY) {
 		if (pSceneTouchEvent.isActionUp()) {
-			final float[] pToTiles = this.mParent.getEngine().getScene().convertLocalToSceneCoordinates(pX, pY);
+			final float[] pToTiles = this.mParent.getEngine().getScene().convertLocalCoordinatesToSceneCoordinates(pX, pY);
 			this.drawHuman(pToTiles);
 		}
 	}
@@ -69,8 +69,8 @@ public class HumanPlacer implements ITouchListener {
 		 * offset[1] = Y Offset
 		 */
 		float[] offset = new float[2];
-		offset[0] = -15.5f;
-		offset[1] = -40f;
+		offset[0] = 0;
+		offset[1] = 16f;
 		/*
 		 * As our offsets are already negative, adding to the tile centre will really subtract instead
 		 */
@@ -88,7 +88,7 @@ public class HumanPlacer implements ITouchListener {
 		/*
 		 * We could calculate the 3DXY now, but since we're going to move the human about, we'll wait for the recalculation to fix it for us
 		 */
-		humanEntity.set3DRecalculationPoint(16, 28);
+		humanEntity.set3DRecalculationPoint(0, 5);
 		this.mParent.runOnUpdateThread(new Runnable() {
 
 			@Override

@@ -56,6 +56,7 @@ public class MapHandler {
 			this.mTMXTiledMap = txMap;
 			this.mConvertPixelToScene = new ConvertIsometricPixelToScene(this.mTMXTiledMap);
 			this.mTMXTiledMap.setIsometricDrawMethod(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_CULLING_TILED_SOURCE);
+			//this.mTMXTiledMap.setIsometricDrawMethod(TMXIsometricConstants.DRAW_METHOD_ISOMETRIC_ALL);
 			this.mTileManager = new TileManager(this.mTMXTiledMap.getTileColumns(), this.mTMXTiledMap.getTileRows());
 			this.mTMXLayer = this.mTMXTiledMap.getTMXLayers().get(0);
 			this.attachMap(txMap);

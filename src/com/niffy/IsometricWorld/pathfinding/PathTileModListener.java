@@ -3,7 +3,7 @@ package com.niffy.IsometricWorld.pathfinding;
 import org.andengine.entity.IEntity;
 import org.andengine.entity.modifier.EntityModifier;
 import org.andengine.entity.sprite.AnimatedSprite;
-import org.andengine.util.algorithm.path.astar.tile.mod.AStarPathTileModifierSimple.IAStarPathTileModifierListener;
+import org.andengine.util.algorithm.path.astar.isometric.AStarPathTileModifier.IAStarPathTileModifierListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

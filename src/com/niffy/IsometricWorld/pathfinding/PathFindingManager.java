@@ -2,12 +2,12 @@ package com.niffy.IsometricWorld.pathfinding;
 
 import org.andengine.extension.tmx.TMXLayer;
 import org.andengine.util.algorithm.path.Path;
-import org.andengine.util.algorithm.path.astar.tile.AStarPathFinderTileBased;
-import org.andengine.util.algorithm.path.astar.tile.ITileAStarHeuristic;
-import org.andengine.util.algorithm.path.astar.tile.ITileCostFunction;
-import org.andengine.util.algorithm.path.astar.tile.ITilePathFinderMap;
-import org.andengine.util.algorithm.path.astar.tile.mod.AStarPathTileModifierSimple;
-import org.andengine.util.algorithm.path.astar.tile.pool.AStarPathTilePoolManager;
+import org.andengine.util.algorithm.path.astar.isometric.AStarPathFinderTileBased;
+import org.andengine.util.algorithm.path.astar.isometric.AStarPathTileModifier;
+import org.andengine.util.algorithm.path.astar.isometric.ITileAStarHeuristic;
+import org.andengine.util.algorithm.path.astar.isometric.ITileCostFunction;
+import org.andengine.util.algorithm.path.astar.isometric.ITilePathFinderMap;
+import org.andengine.util.algorithm.path.astar.isometric.pool.AStarPathTilePoolManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +52,7 @@ public class PathFindingManager {
 			@Override
 			public float getExpectedRestCost(ITilePathFinderMap<TMXLayer> pPathFinderMap, TMXLayer pEntity,
 					int pFromRow, int pFromCol, int pToRow, int pToCol) {
+				//TODO fix for anchor center
 				float[] n = pMapManager.getTMXLayer().getTileCentre(pFromCol, pFromRow);
 				float[] g = pMapManager.getTMXLayer().getTileCentre(pToCol, pToRow);
 				float x = (Math.abs(n[0] - g[0]) + Math.abs(n[1] - g[1]));
@@ -107,13 +108,13 @@ public class PathFindingManager {
 		}
 
 		Path pPath = this.getPathBetweenLocations(entityCoordinateTile, entityDestinationTile);
-
+		
 		if (pPath != null) {
 			PathTileModListener modListner = new PathTileModListener(pEntity);
-			pPath.switchXY(true);
-			AStarPathTileModifierSimple mod = new AStarPathTileModifierSimple(1.2f, pPath, this.flipedTileDie,
-					this.mMapManager.getTMXTiledMap().getMapOriginX(), this.mMapManager.getTMXTiledMap()
-							.getMapOriginY(), 0, true, pEntity.getOffset(), null, modListner);
+			pPath.setIsIsometric(true);
+			AStarPathTileModifier mod = new AStarPathTileModifier(1.2f, pPath, this.flipedTileDie,
+					pEntity.getOffset(), modListner);
+			
 			pEntity.getAnimatedSprite().registerEntityModifier(mod);
 		}
 
@@ -130,6 +131,7 @@ public class PathFindingManager {
 		}
 		return found;
 	}
+	
 	// ===========================================================
 	// Inner and Anonymous Classes
 	// ===========================================================

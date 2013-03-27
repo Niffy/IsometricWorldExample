@@ -61,7 +61,7 @@ public class HumanManager implements ISpriteClicked, ITouchListener {
 		if (this.mHumanEntity != null) {
 			if (pSceneTouchEvent.isActionUp()) {
 				this.mParent.mTouchManager.unregisterListener(this);
-				final float[] pTiles = this.mParent.getEngine().getScene().convertLocalToSceneCoordinates(pX, pY);
+				final float[] pTiles = this.mParent.getEngine().getScene().convertLocalCoordinatesToSceneCoordinates(pX, pY);
 				this.mPathFindingManager.findPath(this.mHumanEntity, pTiles);
 			}
 		}

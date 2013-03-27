@@ -65,8 +65,8 @@ public class ObjectPlacer implements ITouchListener {
 					this.mBlockColOrigin = pLoc[1];
 
 					final float[] pTileCen = this.mParent.mMapHandler.getTileCentre(pLoc);
-					final float pDrawX = pTileCen[0] - this.mTemplate.getmXOffset();
-					final float pDrawY = pTileCen[1] - this.mTemplate.getmYOffset();
+					final float pDrawX = pTileCen[0] + this.mTemplate.getmXOffset();
+					final float pDrawY = pTileCen[1] + this.mTemplate.getmYOffset();
 
 					this.mSprite.setPosition(pDrawX, pDrawY);
 					this.mSprite.set3DSize(this.mTemplate.getM3DWidth(), this.mTemplate.getM3DLength(),
@@ -125,7 +125,7 @@ public class ObjectPlacer implements ITouchListener {
 
 	public void cancel() {
 		this.mParent.runOnUpdateThread(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				mParent.getEngine().getScene().detachChild(mSprite);
