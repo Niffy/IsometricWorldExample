@@ -1,8 +1,8 @@
 Isometric World Example
 ===================
 # Requirements!
- * Andengine (my Niffy branch) [https://github.com/Niffy/AndEngine/tree/niffy](https://github.com/Niffy/AndEngine/tree/niffy "AndEngine Isometric Branch")
- * TMX extension (Isometric branch created by me and in my github repo) [https://github.com/Niffy/AndEngineTMXTiledMapExtension/tree/isometric](https://github.com/Niffy/AndEngineTMXTiledMapExtension/tree/isometric "AndEngineTMXTiledMapExtension Isometric Branch")
+ * Andengine (my Niffy branch) [https://github.com/Niffy/AndEngine/tree/niffy-AnchorCenter](https://github.com/Niffy/AndEngine/tree/niffy-AnchorCenter "AndEngine Isometric AnchorCenter Branch")
+ * TMX extension (Isometric branch created by me and in my github repo) [https://github.com/Niffy/AndEngineTMXTiledMapExtension/tree/GLES2-AnchorCenter_isometric](https://github.com/Niffy/AndEngineTMXTiledMapExtension/tree/GLES2-AnchorCenter_isometric "AndEngineTMXTiledMapExtension Isometric Branch")
 
 ### How to build
  * So clone this repo
