@@ -83,6 +83,10 @@ public class GeneralManager {
 		this.mFragmentDone.setParent(this.mParent);
 		this.addFragment(this.mFragmentDone);
 	}
+	
+	public void networkClick(){
+		
+	}
 
 	private void addFragment(final Fragment pFragment) {
 		FragmentTransaction ft = this.mParent.getSupportFragmentManager().beginTransaction();

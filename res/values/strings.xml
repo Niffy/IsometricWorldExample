@@ -4,6 +4,7 @@
     <string name="hello">Hello World, IsometricWorld!</string>
     <string name="app_name">IsometricWorld</string>
     <string name="build">Build object</string>
+    <string name="network">Networking</string>
     <string name="human">Place Human</string>
     <string name="map">Change Map</string>
     <string name="done">Done</string>

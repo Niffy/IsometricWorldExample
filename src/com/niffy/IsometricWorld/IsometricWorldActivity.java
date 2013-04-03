@@ -41,6 +41,7 @@ import com.niffy.IsometricWorld.entity.CubeTemplate;
 import com.niffy.IsometricWorld.entity.HumanManager;
 import com.niffy.IsometricWorld.fragments.FragmentBuild;
 import com.niffy.IsometricWorld.fragments.FragmentHuman;
+import com.niffy.IsometricWorld.fragments.FragmentNetwork;
 import com.niffy.IsometricWorld.network.NetworkManager;
 import com.niffy.IsometricWorld.touch.ITouchManager;
 import com.niffy.IsometricWorld.touch.TouchManager;
@@ -66,6 +67,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 
 	public FragmentBuild mBuildFragment;
 	public FragmentHuman mHumanFragment;
+	public FragmentNetwork mNetworkFragment;
 	public GeneralManager mGeneralManager;
 	public MapHandler mMapHandler;
 	public HumanManager mHumanManager;
@@ -191,8 +193,11 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 				R.id.fragment_topbar_build_object);
 		this.mHumanFragment = (FragmentHuman) this.getSupportFragmentManager().findFragmentById(
 				R.id.fragment_topbar_build_human);
+		this.mNetworkFragment = (FragmentNetwork) this.getSupportFragmentManager().findFragmentById(
+				R.id.fragment_topbar_network);
 		this.mBuildFragment.setParent(this);
 		this.mHumanFragment.setParent(this);
+		this.mNetworkFragment.setParent(this);
 		this.mHumanFragment.setGeneralManager(this.mGeneralManager);
 		this.mMapHandler.loadMap_Iso(this.mFullMapPath);
 		this.mHumanManager.setMapHandler(this.mMapHandler);

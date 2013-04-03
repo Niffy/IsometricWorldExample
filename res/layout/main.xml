@@ -44,11 +44,26 @@
                 android:name="com.niffy.IsometricWorld.fragments.FragmentHuman"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
                 android:layout_alignTop="@+id/fragment_topbar_build_object"
-                 android:layout_alignParentRight="true"
                 tools:layout="@layout/button_human" >
             </fragment>
+        </RelativeLayout>
 
+        <RelativeLayout
+            android:id="@+id/topbar_manipulate_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/topbar_manipulate"
+            android:layout_marginTop="20sp" >
+
+            <fragment
+                android:id="@+id/fragment_topbar_network"
+                android:name="com.niffy.IsometricWorld.fragments.FragmentNetwork"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:layout="@layout/button_network" >
+            </fragment>
         </RelativeLayout>
 
         <RelativeLayout
