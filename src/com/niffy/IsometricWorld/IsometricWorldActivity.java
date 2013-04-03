@@ -9,7 +9,6 @@ import org.andengine.engine.camera.ZoomCamera;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.FillResolutionPolicy;
-import org.andengine.entity.primitive.Line;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
@@ -23,7 +22,6 @@ import org.andengine.input.touch.detector.SurfaceScrollDetector;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.ui.activity.fragments.compatibility.LayoutGameFragment;
-import org.andengine.util.adt.color.Color;
 import org.andengine.util.texturepack.TexturePack;
 import org.andengine.util.texturepack.TexturePackLoader;
 import org.andengine.util.texturepack.TexturePackTextureRegionLibrary;
@@ -33,17 +31,22 @@ import org.slf4j.LoggerFactory;
 
 import android.content.res.Resources.NotFoundException;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.DisplayMetrics;
 
+import com.niffy.AndEngineLockStepEngine.flags.ITCFlags;
+import com.niffy.AndEngineLockStepEngine.misc.IHandlerMessage;
+import com.niffy.AndEngineLockStepEngine.misc.WeakThreadHandler;
 import com.niffy.IsometricWorld.entity.CubeTemplate;
 import com.niffy.IsometricWorld.entity.HumanManager;
 import com.niffy.IsometricWorld.fragments.FragmentBuild;
 import com.niffy.IsometricWorld.fragments.FragmentHuman;
+import com.niffy.IsometricWorld.network.NetworkManager;
 import com.niffy.IsometricWorld.touch.ITouchManager;
 import com.niffy.IsometricWorld.touch.TouchManager;
 
 public class IsometricWorldActivity extends LayoutGameFragment implements IOnSceneTouchListener,
-		IScrollDetectorListener, IPinchZoomDetectorListener {
+		IScrollDetectorListener, IPinchZoomDetectorListener, IHandlerMessage {
 
 	private final Logger log = LoggerFactory.getLogger(IsometricWorldActivity.class);
 
@@ -66,7 +69,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 	public GeneralManager mGeneralManager;
 	public MapHandler mMapHandler;
 	public HumanManager mHumanManager;
-	
+
 	public String TMXAssetsLocation = "tmx/";
 	public String TMXFileTag = ".tmx";
 	public String TMXFile = "isometricBlocks";
@@ -80,12 +83,30 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 	private String mFolder = "spritesheet/";
 	private String mDataFile = "cubes.xml";
 	private String mGraphicsLocation = "gfx/";
+	/**
+	 * Something we can access in an inner class
+	 */
+	private IHandlerMessage mHandlerMessage;
+	public WeakThreadHandler<IHandlerMessage> mHander;
+	public NetworkManager mNetworkManager;
 
 	@Override
 	public void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
 		ConfigureLog.configure("isoWorld.txt", 10, 10000);
 		log.info("Starting game!");
+		/*
+		 * We have mHandlerMessage so we can access it in the runnable about to be created.
+		 * We create it on the UI thread as that has a looper, as Andengine is a GLThread 
+		 * that doesn't have a looper therefore messages cannot be processed
+		 */
+		this.mHandlerMessage = this;
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mHander = new WeakThreadHandler<IHandlerMessage>(mHandlerMessage);
+			}
+		});
 	}
 
 	protected int getLayoutID() {
@@ -121,7 +142,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mMapHandler = new MapHandler(this);
 		this.mGeneralManager = new GeneralManager(this, this.mMapHandler);
 		this.mHumanManager = new HumanManager(this, this.mGeneralManager);
-		
+
 		this.mScrollDetector = new SurfaceScrollDetector(this);
 		this.mPinchZoomDetector = new PinchZoomDetector(this);
 		this.mTouchManager = new TouchManager();
@@ -240,7 +261,9 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 			if (pSceneTouchEvent.isActionUp()) {
 				if (this.mClicked) {
 					log.info("Scene touch");
-					final float[] pToTiles = this.getEngine().getScene()
+					final float[] pToTiles = this
+							.getEngine()
+							.getScene()
 							.convertLocalCoordinatesToSceneCoordinates(pSceneTouchEvent.getX(), pSceneTouchEvent.getY());
 					int[] alt = this.mMapHandler.getTMXLayer().getRowColAtIsometric(pToTiles);
 					int[] found = this.mMapHandler.getTileAt(pToTiles);
@@ -296,29 +319,28 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		final float xMin = this.mMapHandler.getTMXTiledMap().getTileRows() * halfTileWidth;
 		final float xMax = this.mMapHandler.getTMXTiledMap().getTileColumns() * halfTileWidth;
 		final float pBoundsXMin = halfTileWidth - xMin - MAX_CAMERA_BOUND_ADDITION;
-		final float pBoundsYMin =- height + MAX_CAMERA_BOUND_ADDITION; 
+		final float pBoundsYMin = -height + MAX_CAMERA_BOUND_ADDITION;
 		final float pBoundsXMax = halfTileWidth + xMax + MAX_CAMERA_BOUND_ADDITION;
-		final float pBoundsYMax = MAX_CAMERA_BOUND_ADDITION ;
+		final float pBoundsYMax = MAX_CAMERA_BOUND_ADDITION;
 		this.mCamera.setBounds(pBoundsXMin, pBoundsYMin, pBoundsXMax, pBoundsYMax);
 		this.mCamera.setBoundsEnabled(true);
-		this.resetCamera(); 
-		
+		this.resetCamera();
+
 	}
 
-	
 	public TiledTextureRegion getTextureTiled(String pSource, int pRows, int pCols) {
-			ITextureRegion txm = this.mSpritesheetTexturePackTextureRegionLibrary.get(pSource);
-			TiledTextureRegion found = TiledTextureRegion.create(this.mSpritesheetTexturePack.getTexture(),
-					(int) txm.getTextureX(), (int) txm.getTextureY(), (int) txm.getWidth(), (int) txm.getHeight(),
-					pCols, pRows);
-			return found;
+		ITextureRegion txm = this.mSpritesheetTexturePackTextureRegionLibrary.get(pSource);
+		TiledTextureRegion found = TiledTextureRegion.create(this.mSpritesheetTexturePack.getTexture(),
+				(int) txm.getTextureX(), (int) txm.getTextureY(), (int) txm.getWidth(), (int) txm.getHeight(), pCols,
+				pRows);
+		return found;
 	}
-	
+
 	public void produceTemplates() {
 		this.mTextures = new HashMap<String, ITextureRegion>();
 		CubeTemplate one = new CubeTemplate("32x32x32.png");
 		one.setWLH(32, 32, 32);
-		one.setmYOffset(17); 
+		one.setmYOffset(17);
 		one.setmXOffset(0);
 		one.setTileColsBlocked(1);
 		one.setTileRowsBlocked(1);
@@ -394,6 +416,10 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mData.add(five);
 		this.mData.add(six);
 		this.mData.add(seven);
+	}
 
+	@Override
+	public void handlePassedMessage(Message pMessage) {
+		this.mNetworkManager.handlePassedMessage(pMessage);
 	}
 }
