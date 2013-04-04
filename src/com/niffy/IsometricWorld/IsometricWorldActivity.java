@@ -1,5 +1,6 @@
 package com.niffy.IsometricWorld;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -34,13 +35,15 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.DisplayMetrics;
 
-import com.niffy.AndEngineLockStepEngine.flags.ITCFlags;
 import com.niffy.AndEngineLockStepEngine.misc.IHandlerMessage;
 import com.niffy.AndEngineLockStepEngine.misc.WeakThreadHandler;
+import com.niffy.AndEngineLockStepEngine.options.BaseOptions;
+import com.niffy.AndEngineLockStepEngine.options.IBaseOptions;
 import com.niffy.IsometricWorld.entity.CubeTemplate;
 import com.niffy.IsometricWorld.entity.HumanManager;
 import com.niffy.IsometricWorld.fragments.FragmentBuild;
 import com.niffy.IsometricWorld.fragments.FragmentHuman;
+import com.niffy.IsometricWorld.fragments.FragmentMultiplayerRole;
 import com.niffy.IsometricWorld.fragments.FragmentNetwork;
 import com.niffy.IsometricWorld.network.NetworkManager;
 import com.niffy.IsometricWorld.touch.ITouchManager;
@@ -68,6 +71,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 	public FragmentBuild mBuildFragment;
 	public FragmentHuman mHumanFragment;
 	public FragmentNetwork mNetworkFragment;
+	public FragmentMultiplayerRole mNetworkRoleDialog;
 	public GeneralManager mGeneralManager;
 	public MapHandler mMapHandler;
 	public HumanManager mHumanManager;
@@ -91,6 +95,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 	private IHandlerMessage mHandlerMessage;
 	public WeakThreadHandler<IHandlerMessage> mHander;
 	public NetworkManager mNetworkManager;
+	public IBaseOptions mBaseOptions;
 
 	@Override
 	public void onCreate(Bundle pSavedInstanceState) {
@@ -201,6 +206,9 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mHumanFragment.setGeneralManager(this.mGeneralManager);
 		this.mMapHandler.loadMap_Iso(this.mFullMapPath);
 		this.mHumanManager.setMapHandler(this.mMapHandler);
+		this.mNetworkRoleDialog = new FragmentMultiplayerRole(this.mGeneralManager);
+		this.mGeneralManager.setNetworkRoleDialog(this.mNetworkRoleDialog);
+
 		pOnPopulateSceneCallback.onPopulateSceneFinished();
 	}
 
@@ -285,6 +293,18 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public synchronized void onGameCreated() {
+		super.onGameCreated();
+		this.produceBaseOptions();
+		try {
+			this.mNetworkManager = new NetworkManager(this, this.mBaseOptions);
+			this.mGeneralManager.setNetworkManager(this.mNetworkManager);
+		} catch (UnknownHostException e) {
+			log.error("could not create network manager", e);
+		}
 	}
 
 	public void resetCamera() {
@@ -421,6 +441,21 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mData.add(five);
 		this.mData.add(six);
 		this.mData.add(seven);
+	}
+
+	public void produceBaseOptions() {
+		this.mBaseOptions = new BaseOptions();
+		this.mBaseOptions.setAckWindowSize(100);
+		this.mBaseOptions.setClientName("Player!");
+		this.mBaseOptions.setNetworkBufferSize(512);
+		this.mBaseOptions.setPingRTT(0); /* TODO */
+		this.mBaseOptions.setStandardTickLength(100); /* TODO in milliseconds? */
+		this.mBaseOptions.setStepsBeforeCrisis(2);
+		this.mBaseOptions.setTCPPort(1778);
+		this.mBaseOptions.setUDPPort(1779);
+		this.mBaseOptions.setVersionNumber(0);/* TODO game version*/
+		/* Setting host IP not needed at this point*/
+		
 	}
 
 	@Override

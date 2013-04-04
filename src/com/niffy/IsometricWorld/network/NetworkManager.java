@@ -22,6 +22,7 @@ import com.niffy.AndEngineLockStepEngine.threads.ICommunicationThread;
 import com.niffy.AndEngineLockStepEngine.threads.tcp.TCPCommunicationThread;
 import com.niffy.AndEngineLockStepEngine.threads.udp.UDPCommunicationThread;
 import com.niffy.IsometricWorld.IsometricWorldActivity;
+import com.niffy.IsometricWorld.fragments.DialogTextOk;
 
 public class NetworkManager implements ILockstepClientListener, IHandlerMessage {
 	// ===========================================================
@@ -44,6 +45,7 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	protected ICommunicationThread mUDP;
 	protected boolean mUDPCreated = false;
 	protected boolean mAllThreadsCreated = false;
+
 	// ===========================================================
 	// Constructors
 	// ===========================================================
@@ -86,6 +88,14 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 
 	@Override
 	public void migrate() {
+	}
+
+	@Override
+	public void connected() {
+	}
+
+	@Override
+	public void connectError() {
 	}
 
 	@Override
@@ -137,6 +147,9 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 					pUDP.start();
 				} catch (SocketException e) {
 					log.error("Could not create UDP thread", e);
+					mParent.mNetworkFragment.disableNetworkTouch(true);
+					DialogTextOk dialog = new DialogTextOk("UDP Thread Error", e.toString());
+					dialog.show(mParent.getSupportFragmentManager(), null);
 				}
 			}
 		});
@@ -161,13 +174,21 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 			}
 		}
 	}
-	
-	protected void allThreadsRunning(){
+
+	protected void allThreadsRunning() {
 		this.mLockstepNetwork.attachTCPThread(this.mTCP);
 		this.mLockstepNetwork.attachUDPThread(this.mUDP);
+	}
+
+	public void isHostSelected() {
 		this.mLockstepEngine.startInitialCommunications();
+	}
+
+	public void isClientSelected(final InetAddress pAddress) {
+		this.mLockstepNetwork.connectTo(pAddress);
 	}
 	// ===========================================================
 	// Inner and Anonymous Classes
 	// ===========================================================
+
 }

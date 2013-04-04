@@ -9,8 +9,13 @@
     <string name="map">Change Map</string>
     <string name="done">Done</string>
     <string name="cancel">Cancel</string>
+    <string name="hostip">Input host IP</string>
     <!-- Build dialog -->
     <string name="build_object_width">Width:</string>
     <string name="build_object_length">Length:</string>
     <string name="build_object_height">Height:</string>
+    <!-- Network -->
+    <string name="multiplayer_role_selection">Please select which role you are playing</string>
+    <string name="multiplayer_role_selection_host_label">Host</string>
+    <string name="multiplayer_role_selection_client_label">Client</string>
 </resources>
