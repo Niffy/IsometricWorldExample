@@ -21,7 +21,6 @@ public class IPAddressInput extends DialogFragment {
 	// ===========================================================
 	// Constants
 	// ===========================================================
-	@SuppressWarnings("unused")
 	private final Logger log = LoggerFactory.getLogger(IPAddressInput.class);
 
 	// ===========================================================
@@ -80,7 +79,7 @@ public class IPAddressInput extends DialogFragment {
 			}
 		});
 
-		this.mTextViewButton.addTextChangedListener(new TextValidator(this.mEditView) {
+		this.mEditView.addTextChangedListener(new TextValidator(this.mEditView) {
 
 			@Override
 			public void validate(TextView textView, String pText) {
@@ -90,6 +89,7 @@ public class IPAddressInput extends DialogFragment {
 					mHostIPString = pText;
 				} else {
 					mHostIPString = null;
+					log.warn("Input not matching ip pattern");
 				}
 			}
 		});

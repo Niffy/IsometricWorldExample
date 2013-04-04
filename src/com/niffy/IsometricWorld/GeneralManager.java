@@ -104,7 +104,10 @@ public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInpu
 	}
 
 	public void networkClick() {
-		this.mNetworkRole.show(this.mParent.getSupportFragmentManager(), null);
+		if(!this.mNetworkRoleSelected){
+			this.mNetworkRole.show(this.mParent.getSupportFragmentManager(), null);
+		}
+		
 	}
 
 	private void addFragment(final Fragment pFragment) {

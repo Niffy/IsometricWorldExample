@@ -19,7 +19,7 @@
         android:layout_margin="2dp"
         android:hint="@string/hostip"
         android:digits="0123456789."
-        android:inputType="number" />
+        android:inputType="number|text" />
 
     <TextView
         android:id="@+id/fragment_dialog_input_ok"
