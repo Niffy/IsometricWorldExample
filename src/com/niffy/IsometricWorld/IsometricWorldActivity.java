@@ -302,6 +302,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		try {
 			this.mNetworkManager = new NetworkManager(this, this.mBaseOptions);
 			this.mGeneralManager.setNetworkManager(this.mNetworkManager);
+			this.mNetworkManager.createThreads();
 		} catch (UnknownHostException e) {
 			log.error("could not create network manager", e);
 		}
@@ -460,6 +461,10 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 
 	@Override
 	public void handlePassedMessage(Message pMessage) {
-		this.mNetworkManager.handlePassedMessage(pMessage);
+		log.debug("Handle message: {}",pMessage.what);
+		if(this.mNetworkManager != null){
+			this.mNetworkManager.handlePassedMessage(pMessage);
+		}
+		
 	}
 }

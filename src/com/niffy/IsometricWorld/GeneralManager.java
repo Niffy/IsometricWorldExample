@@ -138,6 +138,7 @@ public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInpu
 	public void isHost() {
 		log.info("Act as host");
 		this.mNetworkRoleSelected = true;
+		this.mNetworkManager.isHostSelected();
 	}
 
 	@Override
@@ -156,10 +157,12 @@ public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInpu
 
 	@Override
 	public void returnInput(String pInput) {
+		log.debug("Got: {}", pInput);
 		if (pInput != null) {
 			try {
 				InetAddress pAddress = InetAddress.getByName(pInput);
-				this.mNetworkManager.isClientSelected(pAddress);
+				log.debug("Got: {} Cast: {}", pInput, pAddress.toString());
+				this.mNetworkManager.isClientSelected(pInput);
 			} catch (UnknownHostException e) {
 				log.error("could not cast ip address from string", e);
 			}

@@ -64,7 +64,6 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 		this.mLockstepEngine = new Lockstep(this, this.mBaseOptions);
 		this.mLockstepNetwork = this.mLockstepEngine.getLockstepNetwork();
 		this.mHandler = this.mParent.mHander;
-		this.createThreads();
 	}
 
 	// ===========================================================
@@ -72,35 +71,42 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	// ===========================================================
 	@Override
 	public void clientConnected(InetAddress pClient) {
+		log.info("Client Connected: {}", pClient.toString());
 	}
 
 	@Override
 	public void clientDisconnected(InetAddress pClient) {
+		log.info("Client Disconnected: {}", pClient.toString());
 	}
 
 	@Override
 	public void clientError(InetAddress pClient, String pMsg) {
+		log.info("Client Error: {} Msg: {}", pClient.toString(), pMsg);
 	}
 
 	@Override
 	public void clientOutOfSync(InetAddress pClient) {
+		log.info("Client Out of Sync: {}", pClient.toString());
 	}
 
 	@Override
 	public void migrate() {
+		log.info("Migrating");
 	}
 
 	@Override
 	public void connected() {
+		log.info("Connected to host");
 	}
 
 	@Override
 	public void connectError() {
+		log.info("Connecting error");
 	}
 
 	@Override
 	public void handlePassedMessage(Message pMessage) {
-		log.debug("Handling message: ", pMessage.what);
+		log.debug("Handling message: {} ", pMessage.what);
 		switch (pMessage.what) {
 		case ITCFlags.TCP_THREAD_START:
 			this.TCPThreadStart();
@@ -119,6 +125,7 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 			break;
 		case ITCFlags.NETWORK_ERROR:
 			this.mLockstepNetwork.handlePassedMessage(pMessage);
+			break;
 		}
 	}
 
@@ -129,33 +136,24 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	// ===========================================================
 	// Methods
 	// ===========================================================
-	protected void createThreads() {
-		this.mParent.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				Thread pTCP = new TCPCommunicationThread(mAddress, mHandler, mBaseOptions);
-				mTCP = (ICommunicationThread) pTCP;
-				pTCP.start();
-			}
-		});
-		this.mParent.runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread pUDP = new UDPCommunicationThread(mAddress, mHandler, mBaseOptions);
-					mUDP = (ICommunicationThread) pUDP;
-					pUDP.start();
-				} catch (SocketException e) {
-					log.error("Could not create UDP thread", e);
-					mParent.mNetworkFragment.disableNetworkTouch(true);
-					DialogTextOk dialog = new DialogTextOk("UDP Thread Error", e.toString());
-					dialog.show(mParent.getSupportFragmentManager(), null);
-				}
-			}
-		});
+	public void createThreads() {
+		Thread pTCP = new TCPCommunicationThread(this.mAddress, this.mHandler, this.mBaseOptions);
+		this.mTCP = (ICommunicationThread) pTCP;
+		pTCP.start();
+		try {
+			Thread pUDP = new UDPCommunicationThread(this.mAddress, this.mHandler, this.mBaseOptions);
+			this.mUDP = (ICommunicationThread) pUDP;
+			pUDP.start();
+		} catch (SocketException e) {
+			log.error("Could not create UDP thread", e);
+			mParent.mNetworkFragment.disableNetworkTouch(true);
+			DialogTextOk dialog = new DialogTextOk("UDP Thread Error", e.toString());
+			dialog.show(mParent.getSupportFragmentManager(), null);
+		}
 	}
 
 	protected void TCPThreadStart() {
+		log.debug("TCPThreadStarted");
 		this.mTCPCreated = true;
 		if (!this.mAllThreadsCreated) {
 			if (this.mTCPCreated && this.mUDPCreated) {
@@ -166,6 +164,7 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	}
 
 	protected void UDPThreadStart() {
+		log.debug("UDPThreadStarted");
 		this.mUDPCreated = true;
 		if (!this.mAllThreadsCreated) {
 			if (this.mTCPCreated && this.mUDPCreated) {
@@ -176,15 +175,19 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	}
 
 	protected void allThreadsRunning() {
+		log.debug("allThreadsRunning");
 		this.mLockstepNetwork.attachTCPThread(this.mTCP);
 		this.mLockstepNetwork.attachUDPThread(this.mUDP);
 	}
 
 	public void isHostSelected() {
+		log.debug("isHostSelected");
+		this.mLockstepNetwork.setMainCommunicationThread(this.mTCP);
 		this.mLockstepEngine.startInitialCommunications();
 	}
 
-	public void isClientSelected(final InetAddress pAddress) {
+	public void isClientSelected(final String pAddress) {
+		log.debug("isClientSelected");
 		this.mLockstepNetwork.connectTo(pAddress);
 	}
 	// ===========================================================
