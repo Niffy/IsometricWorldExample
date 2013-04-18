@@ -9,6 +9,7 @@
     <string name="map">Change Map</string>
     <string name="done">Done</string>
     <string name="cancel">Cancel</string>
+    <string name="migrate">Migrate</string>
     <string name="hostip">Input host IP</string>
     <!-- Build dialog -->
     <string name="build_object_width">Width:</string>

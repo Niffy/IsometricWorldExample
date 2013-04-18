@@ -45,6 +45,7 @@ import com.niffy.IsometricWorld.fragments.FragmentBuild;
 import com.niffy.IsometricWorld.fragments.FragmentHuman;
 import com.niffy.IsometricWorld.fragments.FragmentMultiplayerRole;
 import com.niffy.IsometricWorld.fragments.FragmentNetwork;
+import com.niffy.IsometricWorld.fragments.NetworkStatusDialog;
 import com.niffy.IsometricWorld.network.NetworkManager;
 import com.niffy.IsometricWorld.touch.ITouchManager;
 import com.niffy.IsometricWorld.touch.TouchManager;
@@ -72,6 +73,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 	public FragmentHuman mHumanFragment;
 	public FragmentNetwork mNetworkFragment;
 	public FragmentMultiplayerRole mNetworkRoleDialog;
+	public NetworkStatusDialog mNetworkStatusDialog;
 	public GeneralManager mGeneralManager;
 	public MapHandler mMapHandler;
 	public HumanManager mHumanManager;
@@ -208,7 +210,8 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mHumanManager.setMapHandler(this.mMapHandler);
 		this.mNetworkRoleDialog = new FragmentMultiplayerRole(this.mGeneralManager);
 		this.mGeneralManager.setNetworkRoleDialog(this.mNetworkRoleDialog);
-
+		this.mNetworkStatusDialog = new NetworkStatusDialog(this);
+		this.mGeneralManager.setNetworkStatusDialog(this.mNetworkStatusDialog);
 		pOnPopulateSceneCallback.onPopulateSceneFinished();
 	}
 
@@ -300,7 +303,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		super.onGameCreated();
 		this.produceBaseOptions();
 		try {
-			this.mNetworkManager = new NetworkManager(this, this.mBaseOptions);
+			this.mNetworkManager = new NetworkManager(this, this.mBaseOptions, this.mNetworkStatusDialog);
 			this.mGeneralManager.setNetworkManager(this.mNetworkManager);
 			this.mNetworkManager.createThreads();
 		} catch (UnknownHostException e) {
@@ -456,15 +459,15 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mBaseOptions.setUDPPort(1779);
 		this.mBaseOptions.setVersionNumber(0);/* TODO game version*/
 		/* Setting host IP not needed at this point*/
-		
+
 	}
 
 	@Override
 	public void handlePassedMessage(Message pMessage) {
-		log.debug("Handle message: {}",pMessage.what);
-		if(this.mNetworkManager != null){
+		log.debug("Handle message: {}", pMessage.what);
+		if (this.mNetworkManager != null) {
 			this.mNetworkManager.handlePassedMessage(pMessage);
 		}
-		
+
 	}
 }

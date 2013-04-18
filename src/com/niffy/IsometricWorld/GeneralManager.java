@@ -18,6 +18,7 @@ import com.niffy.IsometricWorld.fragments.FragmentMultiplayerRole;
 import com.niffy.IsometricWorld.fragments.IDialogMultiplayerRoleReturn;
 import com.niffy.IsometricWorld.fragments.IPAddressInput;
 import com.niffy.IsometricWorld.fragments.IPAddressInput.IDialogInputReturn;
+import com.niffy.IsometricWorld.fragments.NetworkStatusDialog;
 import com.niffy.IsometricWorld.network.NetworkManager;
 
 public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInputReturn {
@@ -32,6 +33,7 @@ public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInpu
 	protected ObjectPlacer mObjectPlacer;
 	protected FragmentDone mFragmentDone;
 	protected FragmentMultiplayerRole mNetworkRole;
+	protected NetworkStatusDialog mNetworkStatusDialog;
 	/*
 	 * Has the networking started? helps determine if to show role dialog or status
 	 */
@@ -46,6 +48,10 @@ public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInpu
 
 	public void setNetworkRoleDialog(final FragmentMultiplayerRole pRole) {
 		this.mNetworkRole = pRole;
+	}
+
+	public void setNetworkStatusDialog(final NetworkStatusDialog pDialog) {
+		this.mNetworkStatusDialog = pDialog;
 	}
 
 	public void setNetworkManager(final NetworkManager pNetworkManager) {
@@ -104,10 +110,11 @@ public class GeneralManager implements IDialogMultiplayerRoleReturn, IDialogInpu
 	}
 
 	public void networkClick() {
-		if(!this.mNetworkRoleSelected){
+		if (!this.mNetworkRoleSelected) {
 			this.mNetworkRole.show(this.mParent.getSupportFragmentManager(), null);
+		} else {
+			this.mNetworkStatusDialog.show(this.mParent.getSupportFragmentManager(), null);
 		}
-		
 	}
 
 	private void addFragment(final Fragment pFragment) {
