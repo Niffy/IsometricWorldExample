@@ -1,6 +1,8 @@
 package com.niffy.IsometricWorld.network;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -19,9 +21,14 @@ import com.niffy.AndEngineLockStepEngine.flags.ITCFlags;
 import com.niffy.AndEngineLockStepEngine.misc.IHandlerMessage;
 import com.niffy.AndEngineLockStepEngine.misc.WeakThreadHandler;
 import com.niffy.AndEngineLockStepEngine.options.IBaseOptions;
+import com.niffy.AndEngineLockStepEngine.threads.CommunicationHandler;
+import com.niffy.AndEngineLockStepEngine.threads.ICommunicationHandler;
 import com.niffy.AndEngineLockStepEngine.threads.ICommunicationThread;
-import com.niffy.AndEngineLockStepEngine.threads.tcp.TCPCommunicationThread;
-import com.niffy.AndEngineLockStepEngine.threads.udp.UDPCommunicationThread;
+import com.niffy.AndEngineLockStepEngine.threads.nio.ClientSelector;
+import com.niffy.AndEngineLockStepEngine.threads.nio.IClientSelector;
+import com.niffy.AndEngineLockStepEngine.threads.nio.IServerSelector;
+import com.niffy.AndEngineLockStepEngine.threads.nio.ServerSelector;
+import com.niffy.AndEngineLockStepEngine.threads.nio.UDPSelector;
 import com.niffy.IsometricWorld.IsometricWorldActivity;
 import com.niffy.IsometricWorld.fragments.DialogTextOk;
 import com.niffy.IsometricWorld.fragments.NetworkStatusDialog;
@@ -42,9 +49,12 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	protected WeakThreadHandler<IHandlerMessage> mHandler;
 	protected ILockstepEngine mLockstepEngine;
 	protected ILockstepNetwork mLockstepNetwork;
-	protected ICommunicationThread mTCP;
-	protected boolean mTCPCreated = false;
-	protected ICommunicationThread mUDP;
+	protected ICommunicationHandler mCommunicationHandler;
+	protected IServerSelector mTCPServer;
+	protected IClientSelector mTCPClient;
+	protected IClientSelector mUDPClient;
+	protected boolean mTCPServerCreated = false;
+	protected boolean mTCPClientCreated = false;
 	protected boolean mUDPCreated = false;
 	protected boolean mAllThreadsCreated = false;
 	protected NetworkStatusDialog mNetworkStatusDialog;
@@ -82,7 +92,6 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	public void clientConnected(InetAddress pClient) {
 		log.info("Client Connected: {}", pClient.toString());
 		this.mNetworkStatusDialog.addNewLine("Client Conencted: " + pClient.toString());
-		this.mLockstepNetwork.migrate();
 	}
 
 	@Override
@@ -101,12 +110,6 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	public void clientOutOfSync(InetAddress pClient) {
 		log.info("Client Out of Sync: {}", pClient.toString());
 		this.mNetworkStatusDialog.addNewLine("Client out of sync: " + pClient.toString());
-	}
-
-	@Override
-	public void migrate() {
-		log.info("Migrating");
-		this.mNetworkStatusDialog.addNewLine("We are mirgrating");
 	}
 
 	@Override
@@ -130,15 +133,18 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	@Override
 	public void handlePassedMessage(Message pMessage) {
 		log.debug("Handling message: {} ", pMessage.what);
-		if(this.mLockstepFlags.contains(pMessage.what)){
+		if (this.mLockstepFlags.contains(pMessage.what)) {
 			this.mLockstepNetwork.handlePassedMessage(pMessage);
 		}
 		switch (pMessage.what) {
-		case ITCFlags.TCP_THREAD_START:
-			this.TCPThreadStart();
+		case ITCFlags.TCP_CLIENT_SELECTOR_START:
+
 			break;
-		case ITCFlags.UDP_THREAD_START:
-			this.UDPThreadStart();
+		case ITCFlags.TCP_SERVER_SELECTOR_START:
+
+			break;
+		case ITCFlags.UDP_CLIENT_SELECTOR_START:
+
 			break;
 		}
 	}
@@ -151,58 +157,60 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	// Methods
 	// ===========================================================
 	public void createThreads() {
-		TCPCommunicationThread pTCP = new TCPCommunicationThread(this.mAddress, this.mHandler, this.mBaseOptions);
-		this.mTCP = (ICommunicationThread) pTCP;
-		pTCP.start();
-		//Looper tcpLooper = pTCP.getLooper();
-		//pTCP.setHandler(new WeakThreadHandler<IHandlerMessage>(pTCP, tcpLooper));
-		
+		InetSocketAddress pAddress = new InetSocketAddress(this.mAddress, this.mBaseOptions.getTCPServerPort());
+		InetSocketAddress pAddressClient = new InetSocketAddress(this.mAddress, this.mBaseOptions.getTCPClientPort());
+		InetSocketAddress pAddressUDP = new InetSocketAddress(this.mAddress, this.mBaseOptions.getUDPPort());
+		this.mCommunicationHandler = new CommunicationHandler("Main communication thread", pAddress, this.mHandler,
+				this.mBaseOptions);
+
 		try {
-			UDPCommunicationThread pUDP = new UDPCommunicationThread(this.mAddress, this.mHandler, this.mBaseOptions);
-			this.mUDP = (ICommunicationThread) pUDP;
-			pUDP.start();
-			//Looper udpLooper = pUDP.getLooper();
-			//pUDP.setHandler(new WeakThreadHandler<IHandlerMessage>(pUDP, udpLooper));
-		} catch (SocketException e) {
-			log.error("Could not create UDP thread", e);
-			mParent.mNetworkFragment.disableNetworkTouch(true);
-			DialogTextOk dialog = new DialogTextOk("UDP Thread Error", e.toString());
-			dialog.show(mParent.getSupportFragmentManager(), null);
+			this.mTCPServer = new ServerSelector("ServerThread", pAddress, this.mCommunicationHandler.getHandler(),
+					this.mBaseOptions);
+			this.mTCPClient = new ClientSelector("ClientThread", pAddressClient,
+					this.mCommunicationHandler.getHandler(), this.mBaseOptions);
+			this.mUDPClient = new UDPSelector("UDPThread", pAddressUDP, this.mCommunicationHandler.getHandler(),
+					this.mBaseOptions);
+		} catch (IOException e) {
+			log.error("Could not create selecor threads", e);
+		}
+
+		this.mCommunicationHandler.setTCPClientSelectorThread(this.mTCPClient);
+		this.mCommunicationHandler.setTCPServerSelectorThread(this.mTCPServer);
+		this.mCommunicationHandler.setUDPSelectorThread(this.mUDPClient);
+	}
+
+	protected void TCPServerStart() {
+		log.debug("TCPServerStart");
+		this.mTCPServerCreated = true;
+		if (!this.mAllThreadsCreated) {
+			if (this.mTCPServerCreated && this.mTCPClientCreated && this.mUDPCreated) {
+				this.mAllThreadsCreated = true;
+			}
 		}
 	}
 
-	protected void TCPThreadStart() {
-		log.debug("TCPThreadStarted");
-		this.mTCPCreated = true;
+	protected void TCPClientStart() {
+		log.debug("TCPClientStart");
+		this.mTCPClientCreated = true;
 		if (!this.mAllThreadsCreated) {
-			if (this.mTCPCreated && this.mUDPCreated) {
+			if (this.mTCPServerCreated && this.mTCPClientCreated && this.mUDPCreated) {
 				this.mAllThreadsCreated = true;
-				this.allThreadsRunning();
 			}
 		}
 	}
 
 	protected void UDPThreadStart() {
-		log.debug("UDPThreadStarted");
+		log.debug("UDPThreadStart");
 		this.mUDPCreated = true;
 		if (!this.mAllThreadsCreated) {
-			if (this.mTCPCreated && this.mUDPCreated) {
+			if (this.mTCPServerCreated && this.mTCPClientCreated && this.mUDPCreated) {
 				this.mAllThreadsCreated = true;
-				this.allThreadsRunning();
 			}
 		}
 	}
 
-	protected void allThreadsRunning() {
-		log.debug("allThreadsRunning");
-		this.mLockstepNetwork.attachTCPThread(this.mTCP);
-		this.mLockstepNetwork.attachUDPThread(this.mUDP);
-	}
-
 	public void isHostSelected() {
 		log.debug("isHostSelected");
-		this.mLockstepNetwork.setMainCommunicationThread(this.mTCP);
-		this.mLockstepEngine.startInitialCommunications();
 		this.mNetworkStatusDialog.show(this.mParent.getSupportFragmentManager(), null);
 		this.mNetworkStatusDialog.addNewLine("Acting as host");
 	}

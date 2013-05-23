@@ -455,11 +455,10 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mBaseOptions.setPingRTT(0); /* TODO */
 		this.mBaseOptions.setStandardTickLength(100); /* TODO in milliseconds? */
 		this.mBaseOptions.setStepsBeforeCrisis(2);
-		this.mBaseOptions.setTCPPort(1778);
+		this.mBaseOptions.setTCPClientPort(1777);
+		this.mBaseOptions.setTCPServerPort(1778);
 		this.mBaseOptions.setUDPPort(1779);
 		this.mBaseOptions.setVersionNumber(0);/* TODO game version*/
-		/* Setting host IP not needed at this point*/
-
 	}
 
 	@Override
