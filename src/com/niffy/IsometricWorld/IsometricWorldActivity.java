@@ -35,6 +35,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.DisplayMetrics;
 
+import com.niffy.AndEngineLockStepEngine.Lockstep;
 import com.niffy.AndEngineLockStepEngine.misc.IHandlerMessage;
 import com.niffy.AndEngineLockStepEngine.misc.WeakThreadHandler;
 import com.niffy.AndEngineLockStepEngine.options.BaseOptions;

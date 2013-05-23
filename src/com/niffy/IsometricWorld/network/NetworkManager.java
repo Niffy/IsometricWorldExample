@@ -3,7 +3,6 @@ package com.niffy.IsometricWorld.network;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
@@ -30,7 +29,6 @@ import com.niffy.AndEngineLockStepEngine.threads.nio.IServerSelector;
 import com.niffy.AndEngineLockStepEngine.threads.nio.ServerSelector;
 import com.niffy.AndEngineLockStepEngine.threads.nio.UDPSelector;
 import com.niffy.IsometricWorld.IsometricWorldActivity;
-import com.niffy.IsometricWorld.fragments.DialogTextOk;
 import com.niffy.IsometricWorld.fragments.NetworkStatusDialog;
 
 public class NetworkManager implements ILockstepClientListener, IHandlerMessage {
@@ -59,7 +57,7 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	protected boolean mAllThreadsCreated = false;
 	protected NetworkStatusDialog mNetworkStatusDialog;
 	protected ArrayList<Integer> mLockstepFlags;
-
+	protected ICommunicationThread mCommandManager;
 	// ===========================================================
 	// Constructors
 	// ===========================================================
@@ -78,11 +76,13 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 		}
 		this.mLockstepEngine = new Lockstep(this, this.mBaseOptions);
 		this.mLockstepNetwork = this.mLockstepEngine.getLockstepNetwork();
+		this.mParent.engine.setLockstep(this.mLockstepEngine);
 		this.mHandler = this.mParent.mHander;
 		this.mLockstepFlags = new ArrayList<Integer>(ITCFlags.LOCKSTEP_FLAGS.length);
 		for (int flag : ITCFlags.LOCKSTEP_FLAGS) {
 			this.mLockstepFlags.add(flag);
 		}
+		this.mCommandManager = new CommandManager(this.mBaseOptions, this.mLockstepEngine, this.mLockstepNetwork);
 	}
 
 	// ===========================================================
@@ -92,18 +92,21 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	public void clientConnected(InetAddress pClient) {
 		log.info("Client Connected: {}", pClient.toString());
 		this.mNetworkStatusDialog.addNewLine("Client Conencted: " + pClient.toString());
+		this.mCommandManager.addClient(pClient);
 	}
 
 	@Override
 	public void clientDisconnected(InetAddress pClient) {
 		log.info("Client Disconnected: {}", pClient.toString());
 		this.mNetworkStatusDialog.addNewLine("Client Disconnected: " + pClient.toString());
+		this.mCommandManager.removeClient(pClient);
 	}
 
 	@Override
 	public void clientError(InetAddress pClient, String pMsg) {
 		log.info("Client Error: {} Msg: {}", pClient.toString(), pMsg);
 		this.mNetworkStatusDialog.addNewLine("Client Error: " + pMsg + "Client: " + pClient.toString());
+		/* TODO handle error pass to command manger? */
 	}
 
 	@Override
@@ -149,13 +152,18 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 		case ITCFlags.UDP_CLIENT_SELECTOR_START:
 			this.UDPThreadStart();
 			break;
+		case ITCFlags.RECIEVE_MESSAGE_CLIENT:
+			this.mCommandManager.handlePassedMessage(pMessage);
+			break;
 		}
 	}
 
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
-
+	public ICommand getCommandManager(){
+		return (ICommand) this.mCommandManager;
+	}
 	// ===========================================================
 	// Methods
 	// ===========================================================
@@ -239,6 +247,8 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 		this.mNetworkStatusDialog.show(this.mParent.getSupportFragmentManager(), null);
 		this.mNetworkStatusDialog.addNewLine("Acting as client");
 	}
+	
+	
 	// ===========================================================
 	// Inner and Anonymous Classes
 	// ===========================================================
