@@ -137,14 +137,17 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 			this.mLockstepNetwork.handlePassedMessage(pMessage);
 		}
 		switch (pMessage.what) {
+		case ITCFlags.MAIN_COMMUNICATION_START:
+			this.mainCommunicationThreadStart();
+			break;
 		case ITCFlags.TCP_CLIENT_SELECTOR_START:
-
+			this.TCPClientStart();
 			break;
 		case ITCFlags.TCP_SERVER_SELECTOR_START:
-
+			this.TCPServerStart();
 			break;
 		case ITCFlags.UDP_CLIENT_SELECTOR_START:
-
+			this.UDPThreadStart();
 			break;
 		}
 	}
@@ -157,19 +160,33 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	// Methods
 	// ===========================================================
 	public void createThreads() {
+		log.debug("creating threads");
 		InetSocketAddress pAddress = new InetSocketAddress(this.mAddress, this.mBaseOptions.getTCPServerPort());
-		InetSocketAddress pAddressClient = new InetSocketAddress(this.mAddress, this.mBaseOptions.getTCPClientPort());
-		InetSocketAddress pAddressUDP = new InetSocketAddress(this.mAddress, this.mBaseOptions.getUDPPort());
 		this.mCommunicationHandler = new CommunicationHandler("Main communication thread", pAddress, this.mHandler,
 				this.mBaseOptions);
+		Thread thread = (Thread) this.mCommunicationHandler;
+		thread.start();
+	}
 
+	protected void mainCommunicationThreadStart() {
+		log.debug("Main comms thread started");
+		this.mLockstepNetwork.setMainCommunicationThread(this.mCommunicationHandler);
+		InetSocketAddress pAddressServer = new InetSocketAddress(this.mAddress, this.mBaseOptions.getTCPServerPort());
+		InetSocketAddress pAddressClient = new InetSocketAddress(this.mAddress, this.mBaseOptions.getTCPClientPort());
+		InetSocketAddress pAddressUDP = new InetSocketAddress(this.mAddress, this.mBaseOptions.getUDPPort());
 		try {
-			this.mTCPServer = new ServerSelector("ServerThread", pAddress, this.mCommunicationHandler.getHandler(),
-					this.mBaseOptions);
+			this.mTCPServer = new ServerSelector("ServerThread", pAddressServer,
+					this.mCommunicationHandler.getHandler(), this.mBaseOptions);
+			Thread tcpServer = (Thread) this.mTCPServer;
+			tcpServer.start();
 			this.mTCPClient = new ClientSelector("ClientThread", pAddressClient,
 					this.mCommunicationHandler.getHandler(), this.mBaseOptions);
+			Thread tcpClient = (Thread) this.mTCPClient;
+			tcpClient.start();
 			this.mUDPClient = new UDPSelector("UDPThread", pAddressUDP, this.mCommunicationHandler.getHandler(),
 					this.mBaseOptions);
+			Thread udpClient = (Thread) this.mUDPClient;
+			udpClient.start();
 		} catch (IOException e) {
 			log.error("Could not create selecor threads", e);
 		}
@@ -177,6 +194,7 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 		this.mCommunicationHandler.setTCPClientSelectorThread(this.mTCPClient);
 		this.mCommunicationHandler.setTCPServerSelectorThread(this.mTCPServer);
 		this.mCommunicationHandler.setUDPSelectorThread(this.mUDPClient);
+
 	}
 
 	protected void TCPServerStart() {
