@@ -35,7 +35,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.DisplayMetrics;
 
-import com.niffy.AndEngineLockStepEngine.Lockstep;
 import com.niffy.AndEngineLockStepEngine.misc.IHandlerMessage;
 import com.niffy.AndEngineLockStepEngine.misc.WeakThreadHandler;
 import com.niffy.AndEngineLockStepEngine.options.BaseOptions;
@@ -103,7 +102,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 	@Override
 	public void onCreate(Bundle pSavedInstanceState) {
 		super.onCreate(pSavedInstanceState);
-		ConfigureLog.configure("isoWorld.txt", 10, 10000);
+		ConfigureLog.configure("isoWorld.txt", 10, 10000, 5 * 1024 * 1024);
 		log.info("Starting game!");
 		/*
 		 * We have mHandlerMessage so we can access it in the runnable about to be created.
@@ -117,6 +116,60 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 				mHander = new WeakThreadHandler<IHandlerMessage>(mHandlerMessage);
 			}
 		});
+	}
+
+	@Override
+	protected synchronized void onCreateGame() {
+		super.onCreateGame();
+		log.debug("onCreateGame");
+	}
+
+	@Override
+	public synchronized void onResume() {
+		super.onResume();
+		log.debug("onResume");
+	}
+
+	@Override
+	public synchronized void onResumeGame() {
+		super.onResumeGame();
+		log.debug("onResumeGame");
+	}
+
+	@Override
+	public void onReloadResources() {
+		super.onReloadResources();
+		log.debug("onReloadResources");
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		log.debug("onPause");
+	}
+
+	@Override
+	public synchronized void onPauseGame() {
+		super.onPauseGame();
+		log.debug("onPauseGame");
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		log.debug("onDestroy");
+	}
+
+	@Override
+	public void onDestroyResources() {
+		super.onDestroyResources();
+		log.debug("onDestroyResources");
+	}
+
+	@Override
+	public synchronized void onGameDestroyed() {
+		super.onGameDestroyed();
+		log.debug("onGameDestroyed");
 	}
 
 	protected int getLayoutID() {

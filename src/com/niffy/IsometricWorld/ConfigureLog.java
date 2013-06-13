@@ -41,7 +41,7 @@ public class ConfigureLog {
 	 * @param pMaxBackupSize
 	 * @param pLevel
 	 */
-	public static void configure(final String pLogName, final int pMaxBackupSize, final int pLevel) {
+	public static void configure(final String pLogName, final int pMaxBackupSize, final int pLevel, final int pFileSize) {
 		Level useLevel = Level.toLevel(pLevel, Level.DEBUG);
 		String strFileLocation;
 		String state = Environment.getExternalStorageState();
@@ -54,10 +54,12 @@ public class ConfigureLog {
 		}
 		mLogConfigurator.setMaxBackupSize(pMaxBackupSize);
 		mLogConfigurator.setRootLevel(useLevel);
+		mLogConfigurator.setMaxFileSize(pFileSize);
 		mLogConfigurator.setFileName(strFileLocation);
 		mLogConfigurator.setUseLogCatAppender(true);
 		// mLogConfigurator.setFilePattern("%d - [%p::%c::%C] - %m%n");
-		mLogConfigurator.setFilePattern("%d - [%p::%c] - %m%n");
+		//mLogConfigurator.setFilePattern("%d - [%p::%c] - %m%n");
+		mLogConfigurator.setFilePattern("%d - %-5p - [%t] - [%c] - (%F:%L)- %m%n");
 		mLogConfigurator.setLogCatPattern("%m%n");
 		mLogConfigurator.configure();
 
