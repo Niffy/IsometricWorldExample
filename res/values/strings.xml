@@ -11,6 +11,7 @@
     <string name="cancel">Cancel</string>
     <string name="migrate">Migrate</string>
     <string name="hostip">Input host IP</string>
+    <string name="shutdown">shutdown network</string>
     <!-- Build dialog -->
     <string name="build_object_width">Width:</string>
     <string name="build_object_length">Length:</string>

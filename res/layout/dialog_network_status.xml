@@ -18,9 +18,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/status_text_view"
-        android:layout_centerInParent="true"
         android:layout_marginLeft="10sp"
         android:text="@string/cancel"
+        android:textColor="@android:color/white" />
+    
+     <TextView
+        android:id="@+id/status_shutdown"
+        style="@style/button_red_style"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/status_text_view"
+        android:layout_toRightOf="@+id/status_cancel"
+        android:layout_centerInParent="true"
+
+        android:text="@string/shutdown"
         android:textColor="@android:color/white" />
 
 </RelativeLayout>

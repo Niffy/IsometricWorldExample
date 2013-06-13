@@ -164,6 +164,10 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage 
 	public ICommand getCommandManager(){
 		return (ICommand) this.mCommandManager;
 	}
+	
+	public void shutdownNetwork(){
+		this.mCommunicationHandler.terminate();
+	}
 	// ===========================================================
 	// Methods
 	// ===========================================================

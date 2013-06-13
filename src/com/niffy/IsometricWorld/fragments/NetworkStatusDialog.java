@@ -29,6 +29,7 @@ public class NetworkStatusDialog extends DialogFragment {
 	protected View mView;
 	protected TextView mStatus;
 	protected TextView mCancel;
+	protected TextView mShutdown;
 	protected static ArrayList<String> mData;
 
 	// ===========================================================
@@ -49,6 +50,7 @@ public class NetworkStatusDialog extends DialogFragment {
 		this.mView = inflater.inflate(R.layout.dialog_network_status, container);
 		this.mStatus = (TextView) this.mView.findViewById(R.id.status_text_view);
 		this.mCancel = (TextView) this.mView.findViewById(R.id.status_cancel);
+		this.mShutdown = (TextView) this.mView.findViewById(R.id.status_shutdown);
 		this.mCancel.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -56,6 +58,14 @@ public class NetworkStatusDialog extends DialogFragment {
 				getDialog().dismiss();
 			}
 		});
+		this.mShutdown.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				mParent.mNetworkManager.shutdownNetwork();
+			}
+		});
+		
 		this.getDialog().setTitle(getResources().getString(R.string.app_name));
 		this.mStatus.setText("");
 		for (String pLine : NetworkStatusDialog.mData) {
