@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="logging_summary">
+        <item>OFF</item>
+        <item>FATAL</item>
+        <item>ERROR</item>
+        <item>WARN</item>
+        <item>INFO(default)</item>
+        <item>DEBUG</item>
+        <item>TRACE</item>
+    </string-array>
+    <string-array name="logging_values">
+        <item>10000</item>
+        <item>50000</item>
+        <item>40000</item>
+        <item>30000</item>
+        <item>20000</item>
+        <item>10000</item>
+        <item>5000</item>
+    </string-array>
+</resources>

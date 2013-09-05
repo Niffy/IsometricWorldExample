@@ -513,6 +513,7 @@ public class IsometricWorldActivity extends LayoutGameFragment implements IOnSce
 		this.mBaseOptions.setTCPServerPort(1778);
 		this.mBaseOptions.setUDPPort(1779);
 		this.mBaseOptions.setVersionNumber(0);/* TODO game version*/
+		this.mBaseOptions.setCountdown(5);
 	}
 
 	@Override

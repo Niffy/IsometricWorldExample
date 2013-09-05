@@ -3,7 +3,6 @@ package com.niffy.IsometricWorld.network;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
@@ -40,7 +39,7 @@ public class Commander extends PacketHandler {
 	@Override
 	public void reconstructData(String pAddress, byte[] pData) {
 		try {
-			InetAddress addressCast = InetAddress.getByName(pAddress);
+			String addressCast = pAddress;
 			final ByteArrayInputStream bInput = new ByteArrayInputStream(pData);
 			DataInputStream dis = new DataInputStream(bInput);
 			final int version = dis.readInt();
@@ -60,7 +59,7 @@ public class Commander extends PacketHandler {
 	}
 
 	@Override
-	protected void handleIncomingPacket(final InetAddress pFrom, final int pVersion, final int pSequence,
+	protected void handleIncomingPacket(final String pFrom, final int pVersion, final int pSequence,
 			final boolean pRequireAck, final int pIntended, final int pFlag, final DataInputStream pDataInput,
 			final byte[] pData) throws IOException {
 		if (!pRequireAck) {

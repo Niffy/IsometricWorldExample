@@ -1,8 +1,6 @@
 package com.niffy.IsometricWorld.network;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.andengine.engine.lockstep.ILockstep;
 import org.slf4j.Logger;
@@ -35,7 +33,7 @@ public class CommandManager implements ICommunicationThread, ICommand {
 	protected IBaseOptions mBaseOptions;
 	protected ILockstep mLockstep;
 	protected ILockstepNetwork mLockstepNetwork;
-	protected ArrayList<InetAddress> mClients;
+	protected ArrayList<String> mClients;
 	protected MessagePool<IMessage> mMessagePool;
 	
 	// ===========================================================
@@ -48,7 +46,7 @@ public class CommandManager implements ICommunicationThread, ICommand {
 		this.mCommander = new Commander(this, this.mBaseOptions);
 		this.mLockstep = pLockstepEngine;
 		this.mLockstepNetwork = pLockstepNetwork;
-		this.mClients = new ArrayList<InetAddress>();
+		this.mClients = new ArrayList<String>();
 		this.mMessagePool = new MessagePool<IMessage>();
 		/* TODO populate message pool */
 	}
@@ -84,7 +82,7 @@ public class CommandManager implements ICommunicationThread, ICommand {
 	}
 
 	@Override
-	public void handleErrorMessage(InetAddress pAddress, MessageError pMessage) {
+	public void handleErrorMessage(String pAddress, MessageError pMessage) {
 		/* TODO do we need to handle any errors here? */
 	}
 
@@ -104,12 +102,12 @@ public class CommandManager implements ICommunicationThread, ICommand {
 	}
 
 	@Override
-	public void windowNotEmpty(InetAddress pAddress) {
+	public void windowNotEmpty(String pAddress) {
 		/* TODO handle this */
 	}
 
 	@Override
-	public <T extends IMessage> int sendMessage(InetAddress pAddress, T pMessage, boolean pTCP) {
+	public <T extends IMessage> int sendMessage(String pAddress, T pMessage, boolean pTCP) {
 		/* TODO are we going to pass to lockstep network? */
 		this.mLockstepNetwork.sendMessage(null, pMessage, pTCP);
 		return 0;
@@ -126,19 +124,19 @@ public class CommandManager implements ICommunicationThread, ICommand {
 	}
 
 	@Override
-	public void addClient(InetAddress pAddress) {
+	public void addClient(String pAddress) {
 		/* TODO Do we need to keep track here? */
 		this.mClients.add(pAddress);
 	}
 
 	@Override
-	public ArrayList<InetAddress> getClients() {
+	public ArrayList<String> getClients() {
 		/* TODO Do we need to keep track here? */
 		return this.mClients;
 	}
 
 	@Override
-	public void removeClient(InetAddress pAddress) {
+	public void removeClient(String pAddress) {
 		/* TODO Do we need to keep track here? */
 		this.mClients.remove(pAddress);
 	}

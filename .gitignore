@@ -13,3 +13,8 @@ gen/**
 
 # Local configuration file (sdk path, etc)
 local.properties
+
+libs/**
+buildlog.log
+log.log
+ant.properties
