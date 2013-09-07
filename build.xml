@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="MainMenu" default="help">
+<project name="IsometricWorld" default="help">
 <record name="buildlog.log" action="start" append="false" />
+<!-- 
+The default ant build is flawed for the following reasons
+Everytime I run ant for this project I do not need to rebuild the 
+library projects referenced. So I choose to skip these.
+But because we don't get the google ant build.xml to execute for those projects
+it doesn't produce the project jar file as "classes.jar" instead eclipse calls them something else.
+We need to fix this!
+
+-->
     <!-- The local.properties file is created and updated by the 'android' tool.
          It contains the path to the SDK. It should *NOT* be checked into
          Version Control Systems. -->
@@ -68,6 +77,25 @@
     -->
     <import file="custom_rules.xml" optional="true" />
 
+    <target name="start">
+    <xpath input="AndroidManifest.xml"
+           expression="/manifest/@package"
+           output="manifest.package" />
+    <xpath input="AndroidManifest.xml"
+           expression="/manifest/application/activity[intent-filter/action/@android:name='android.intent.action.MAIN']/@android:name"
+           output="manifest.main" />
+    <echo level="info">Restart main activity ${manifest.package}/${manifest.main}</echo>
+    <exec executable="${android.platform.tools.dir}/adb">
+        <arg value="shell"/>
+        <arg value="am"/>
+        <arg value="start"/>
+        <!-- <arg value="-S"/> -->
+        <arg value="-a"/>
+        <arg value="android.intent.action.MAIN"/>
+        <arg value="-n"/>
+        <arg value="${manifest.package}/${manifest.main}"/>
+    </exec>
+</target>
     <!-- Import the actual build file.
 
          To customize existing targets, there are two options:

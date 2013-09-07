@@ -1,6 +1,5 @@
 package com.niffy.IsometricWorld;
 
-import org.andengine.ui.activity.fragments.compatibility.BaseGameServicesActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,9 +10,10 @@ import android.view.View;
 import android.widget.Button;
 
 import com.google.android.gms.common.SignInButton;
+import com.google.example.games.basegameutils.BaseGameActivity;
 import com.google.example.games.basegameutils.GameHelper;
 
-public class MainMenu extends BaseGameServicesActivity implements GameHelper.GameHelperListener {
+public class MainMenu extends BaseGameActivity implements GameHelper.GameHelperListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
