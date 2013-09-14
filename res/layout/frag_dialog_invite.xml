@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/frag_dialog_invite_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/invite_text" />
+
+    <Button
+        android:id="@+id/frag_dialog_invite_accept"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/frag_dialog_invite_textview"
+        android:text="@string/accept" />
+
+    <Button
+        android:id="@+id/frag_dialog_invite_decline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/frag_dialog_invite_textview"
+        android:layout_toRightOf="@+id/frag_dialog_invite_accept"
+        android:text="@string/decline" />
+
+</RelativeLayout>

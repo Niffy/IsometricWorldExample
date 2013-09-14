@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/framelayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="1" >
+
+    <!-- <org.andengine.opengl.view.RenderSurfaceView -->
+    <!-- <android.opengl.GLSurfaceView -->
+
+    <org.andengine.opengl.view.RenderSurfaceView
+        android:id="@+id/rendersurfaceview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Main layout relative height was was wrap -->
+
+    <RelativeLayout
+        android:id="@+id/main_layout_relative"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:paddingBottom="4dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingTop="4dp" >
+    	<!-- Do we need to have another layout to replace or just use this one? -->    
+        
+    </RelativeLayout>
+
+</FrameLayout>

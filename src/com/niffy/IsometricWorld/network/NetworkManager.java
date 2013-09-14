@@ -58,14 +58,14 @@ public class NetworkManager implements ILockstepClientListener, IHandlerMessage,
 		this.mNetworkStatusDialog = pNetworkStatusDialog;
 		this.mLockstepEngine = new Lockstep(this, this.mBaseOptions, this);
 		this.mLockstepNetwork = this.mLockstepEngine.getLockstepNetwork();
-		this.mParent.engine.setLockstep(this.mLockstepEngine);
-		this.mLockstepEngine.subscribeStepChangeListener(this);
+		//this.mParent.engine.setLockstep(this.mLockstepEngine);
+		//this.mLockstepEngine.subscribeStepChangeListener(this);
 		this.mHandler = this.mParent.mHander;
 		this.mLockstepFlags = new ArrayList<Integer>(ITCFlags.LOCKSTEP_FLAGS.length);
 		for (int flag : ITCFlags.LOCKSTEP_FLAGS) {
 			this.mLockstepFlags.add(flag);
 		}
-		this.mCommandManager = new CommandManager(this.mBaseOptions, this.mLockstepEngine, this.mLockstepNetwork);
+		//this.mCommandManager = new CommandManager(this.mBaseOptions, this.mLockstepEngine, this.mLockstepNetwork);
 	}
 
 	// ===========================================================

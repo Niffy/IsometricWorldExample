@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="@android:color/transparent"
     android:orientation="vertical" >
 
     <Button
@@ -11,21 +11,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
         android:layout_margin="5dp"
         android:text="@string/single_player" />
-    
+
     <Button
         android:id="@+id/btn_main_menu_multiplayer"
-        android:visibility="gone"
-        android:layout_below="@+id/btn_main_menu_single_palyer"
         style="@style/button_red_style"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_main_menu_single_palyer"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_margin="5dp"
-        android:text="@string/Multiplayer" />
+        android:text="@string/Multiplayer"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/btn_main_menu_load_game"
@@ -59,7 +58,7 @@
         android:layout_centerVertical="true"
         android:layout_margin="5dp"
         android:text="@string/exit" />
-	
+
     <com.google.android.gms.common.SignInButton
         android:id="@+id/button_sign_in"
         style="@style/SignInButton"
@@ -67,6 +66,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_margin="5dp" />
+
     <Button
         android:id="@+id/btn_main_menu_sign_out"
         style="@style/button_red_style"
@@ -76,7 +76,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_margin="5dp"
-        android:visibility="gone"
-        android:text="@string/sign_out" />
+        android:text="@string/sign_out"
+        android:visibility="gone" />
 
 </RelativeLayout>

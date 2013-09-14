@@ -24,10 +24,10 @@
             android:value="@string/app_id" />
 
         <activity
-            android:name=".MainMenu"
+            android:name="com.niffy.IsometricWorld.MainActivity"
             android:configChanges="orientation"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="landscape" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -35,9 +35,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".IsometricWorldActivity"
+            android:name="com.niffy.IsometricWorld.IsometricWorldActivity"
             android:label="@string/app_name"
             android:screenOrientation="landscape" >
+        </activity>
+        <activity
+            android:name="com.niffy.IsometricWorld.menu.fragments.FragmentMultiplayer"
+            android:label="@string/title_activity_multiplayer" >
+        </activity>
+        <activity
+            android:name="com.niffy.IsometricWorld.Lobby"
+            android:label="@string/title_activity_lobby" >
         </activity>
     </application>
 

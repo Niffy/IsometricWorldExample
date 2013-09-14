@@ -3,4 +3,5 @@
         <!-- Camera Settings -->
     <integer name="zoomDepth">3</integer>
 	<integer name="zoomMax">1</integer>
+	<integer name="defaultPlayers">1</integer>
 </resources>

@@ -1,28 +1,28 @@
-package com.niffy.IsometricWorld;
+package com.niffy.IsometricWorld.menu.fragments;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.google.android.gms.common.SignInButton;
-import com.google.example.games.basegameutils.BaseGameActivity;
-import com.google.example.games.basegameutils.GameHelper;
+import com.google.example.games.basegameutils.GameHelper.GameHelperListener;
+import com.niffy.IsometricWorld.R;
+import com.niffy.IsometricWorld.menu.MenuManager;
 
-public class MainMenu extends BaseGameActivity implements GameHelper.GameHelperListener {
+public class FragmentMainMenu extends FragmentBase implements GameHelperListener {
 	// ===========================================================
 	// Constants
 	// ===========================================================
-	private final Logger log = LoggerFactory.getLogger(MainMenu.class);
+	private final Logger log = LoggerFactory.getLogger(FragmentMainMenu.class);
 
 	// ===========================================================
 	// Fields
 	// ===========================================================
-
 	protected SignInButton mSignInButton;
 	protected Button mSinglePlayer;
 	protected Button mMultiplayer;
@@ -35,33 +35,31 @@ public class MainMenu extends BaseGameActivity implements GameHelper.GameHelperL
 	// ===========================================================
 	// Constructors
 	// ===========================================================
+	public FragmentMainMenu(final MenuManager pParent) {
+		super(pParent);
+	}
 
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
-		String pStringKey = this.getResources().getString(R.string.settings_key_logging);
-		String pLoggingLevel = prefs.getString(pStringKey, "20000");
-		int pLevel = Integer.valueOf(pLoggingLevel);
-		ConfigureLog.configure("IsometricWorld.log", 10, pLevel, 5 * 1024 * 1024);
-		log.info("Starting game up");
-		
-		setContentView(com.niffy.IsometricWorld.R.layout.default_start);
-		this.mSignInButton = (SignInButton) findViewById(R.id.button_sign_in);
-		this.mSinglePlayer = (Button) findViewById(R.id.btn_main_menu_single_palyer);
-		this.mMultiplayer = (Button) findViewById(R.id.btn_main_menu_multiplayer);
-		this.mSettings = (Button) findViewById(R.id.btn_main_menu_settings);
-		this.mLoadGame = (Button) findViewById(R.id.btn_main_menu_load_game);
-		this.mExit = (Button) findViewById(R.id.btn_main_menu_exit);
-		this.mSignOut = (Button) findViewById(R.id.btn_main_menu_sign_out);
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		super.onCreateView(inflater, container, savedInstanceState);
+		log.info("Creating MainMenuView");
+		this.view = inflater.inflate(R.layout.frag_main_menu, container, false);
+		this.mSignInButton = (SignInButton) this.view.findViewById(R.id.button_sign_in);
+		this.mSinglePlayer = (Button) this.view.findViewById(R.id.btn_main_menu_single_palyer);
+		this.mMultiplayer = (Button) this.view.findViewById(R.id.btn_main_menu_multiplayer);
+		this.mSettings = (Button) this.view.findViewById(R.id.btn_main_menu_settings);
+		this.mLoadGame = (Button) this.view.findViewById(R.id.btn_main_menu_load_game);
+		this.mExit = (Button) this.view.findViewById(R.id.btn_main_menu_exit);
+		this.mSignOut = (Button) this.view.findViewById(R.id.btn_main_menu_sign_out);
+
 		this.mSignInButton.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				beginUserInitiatedSignIn();
+				mParent.signInOutClicked(true);
 			}
 		});
 		this.mSinglePlayer.setOnClickListener(new View.OnClickListener() {
@@ -106,22 +104,41 @@ public class MainMenu extends BaseGameActivity implements GameHelper.GameHelperL
 				signOutClick();
 			}
 		});
+		return this.view;
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		if(this.isVisible()){
+			if(this.mParent.getParent().isSignedIn()){
+				this.swapSignInOut();
+			}
+		}
+	}
+	
+	@Override
+	public void onStart() {
+		super.onStart();
+		this.mParent.getParent().registerSignInListener(this);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		this.mParent.getParent().removeSignInListener(this);
 	}
 
 	@Override
 	public void onSignInFailed() {
-		log.error("onSignInFailed");
-		this.mSignedIn = false;
-		this.swapSignInOut();
+		this.signInStatus(false);
 	}
 
 	@Override
 	public void onSignInSucceeded() {
-		log.error("onSignInSucceeded");
-		this.mSignedIn = true;
-		this.swapSignInOut();
+		this.signInStatus(true);
 	}
-
+	
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
@@ -129,45 +146,51 @@ public class MainMenu extends BaseGameActivity implements GameHelper.GameHelperL
 	// ===========================================================
 	// Methods
 	// ===========================================================
+	public void signInStatus(final boolean pStatus) {
+		this.mSignedIn = pStatus;
+		this.swapSignInOut();
+	}
+
 	protected void singlePlayerClick() {
-		log.error("singlePlayerClick");
+		log.debug("singlePlayerClick");
 	}
 
 	protected void multiplayerClick() {
-		log.error("multiplayerClick");
+		log.debug("multiplayerClick");
+		this.mParent.showMultiplayerMenu();
 	}
-	
+
 	protected void loadGameClick() {
-		log.error("loadGame");
+		log.debug("loadGame");
 	}
 
 	protected void settingsClick() {
-		log.error("settingsClick");
+		log.debug("settingsClick");
 	}
 
 	protected void exitClick() {
-		log.error("exitClick");
+		log.debug("exitClick");
 	}
-	
-	protected void signOutClick(){
-		log.error("signOutClick");
-		signOut();
-		
+
+	protected void signOutClick() {
+		log.debug("signOutClick");
+		this.mParent.signInOutClicked(false);
 	}
-	
-	protected void swapSignInOut(){
-		log.error("swapSignInOut: {}", this.mSignedIn);
-		if(this.mSignedIn){
+
+	protected void swapSignInOut() {
+		log.debug("swapSignInOut: {}", this.mSignedIn);
+		if (this.mSignedIn) {
 			this.mSignInButton.setVisibility(View.GONE);
 			this.mSignOut.setVisibility(View.VISIBLE);
 			this.mMultiplayer.setVisibility(View.VISIBLE);
-		}else{
+		} else {
 			this.mSignOut.setVisibility(View.GONE);
 			this.mMultiplayer.setVisibility(View.GONE);
 			this.mSignInButton.setVisibility(View.VISIBLE);
 		}
 	}
-	
+
+
 	// ===========================================================
 	// Inner and Anonymous Classes
 	// ===========================================================
